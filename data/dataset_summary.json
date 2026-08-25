@@ -1,0 +1,38 @@
+{
+  "seed": 42,
+  "villages": {
+    "A": {
+      "name": "Rampur Khurd",
+      "schema_type": "individual",
+      "parcel_count": 200,
+      "injected_mismatches": 30,
+      "injected_duplicates": 10,
+      "injected_benami": 5,
+      "files": [
+        "parcels_village_A.json",
+        "parcels_village_A.csv"
+      ]
+    },
+    "B": {
+      "name": "Vellore Nagar",
+      "schema_type": "individual",
+      "parcel_count": 200,
+      "injected_mismatches": 30,
+      "injected_duplicates": 10,
+      "injected_benami": 0,
+      "files": [
+        "parcels_village_B.json",
+        "parcels_village_B.csv"
+      ]
+    },
+    "C": {
+      "name": "Dongri Pahad",
+      "schema_type": "community",
+      "parcel_count": 100,
+      "member_count": 20,
+      "voting_events": 15,
+      "file": "parcels_village_C_community.json"
+    }
+  },
+  "total_parcels": 500
+}
