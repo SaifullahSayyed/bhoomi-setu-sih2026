@@ -7,7 +7,7 @@
       "parcel_count": 200,
       "injected_mismatches": 30,
       "injected_duplicates": 10,
-      "injected_benami": 5,
+      "injected_benami": 8,
       "files": [
         "parcels_village_A.json",
         "parcels_village_A.csv"

@@ -86,7 +86,7 @@ def normalise_unit(raw: str) -> str:
 @dataclass
 class MirrorConfig:
     area_tolerance: float = 0.10        # 10% — mismatches above this are flagged
-    benami_parcel_threshold: int = 3    # owner appearing on ≥3 parcels triggers flag
+    benami_parcel_threshold: int = 4    # owner appearing on ≥4 parcels triggers flag (demo-scaled; prod uses 8+)
     benami_value_threshold: float = 250_000.0  # ₹2.5 lakh per parcel minimum
     sealing_threshold: int = 85         # mirrors CurtainLedger.sol sealingThreshold
 

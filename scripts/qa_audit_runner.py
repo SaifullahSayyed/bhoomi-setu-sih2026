@@ -70,9 +70,10 @@ def run_qa_audit():
 
     benami_A = sum(1 for p in vA["parcels"] if p["anomaly_flags_injected"]["benami_pattern"])
 
-    print(f"Actual Injected Mismatches: {total_mismatches}/400 ({mismatch_rate * 100:.1f}%)")
-    print(f"Actual Injected Duplicates: {total_dups}/400 ({dup_rate * 100:.1f}%)")
-    print(f"Actual Injected Benami (Village A): {benami_A}")
+    print(f"Actual Injected Mismatches: {total_mismatches}/400 ({mismatch_rate * 100:.1f}%) [Excludes Village C community tenure]")
+    print(f"Actual Injected Duplicates: {total_dups}/400 ({dup_rate * 100:.1f}%) [Excludes Village C community tenure]")
+    print(f"Actual Injected Benami (Village A): {benami_A} (Syndicate of 8 parcels)")
+    assert benami_A == 8, f"Expected 8 benami parcels, got {benami_A}"
 
     # Unique members in Village C
     members = vC.get("registered_members", [])
@@ -81,7 +82,7 @@ def run_qa_audit():
     print(f"Registered Gram Sabha Members in Village C: {len(members)}, Unique Names: {len(unique_names)}")
     assert len(members) == len(unique_names), f"Duplicate member names found: {[n for n in member_names if member_names.count(n) > 1]}"
 
-    # Spot check 10 id_hash values for pseudonymous format & no raw PII
+    # Spot check 10 id_hash values for full 64-char SHA-256 format & no raw PII
     sampled_hashes = []
     all_p = vA["parcels"] + vB["parcels"]
     rng = random.Random(42)
@@ -89,12 +90,12 @@ def run_qa_audit():
         if p.get("owners"):
             h = p["owners"][0]["id_hash"]
             sampled_hashes.append((p["ulpin"], p["owners"][0]["name"], h))
-            # Verify it is a valid hex string of length 40 or 64 without raw Aadhaar/phone
-            assert len(h) in [40, 64], f"Invalid hash length: {len(h)} for {h}"
+            # Verify it is a valid full SHA-256 string of length 64 without raw Aadhaar/phone
+            assert len(h) == 64, f"Hash is not full 64-char SHA-256 (got length {len(h)} for {h})"
             assert all(c in "0123456789abcdefABCDEF" for c in h), f"Non-hex hash: {h}"
             assert not h.isdigit() or len(h) != 12, "Hash appears to be a raw 12-digit Aadhaar number!"
 
-    print(f"Sampled 10 Owner ID Hashes: All valid SHA/hex pseudonyms, 0 raw PII.")
+    print(f"Sampled 10 Owner ID Hashes: All verified as 100% full 64-character SHA-256 hex pseudonyms, 0 raw PII, 0 deprecated SHA-1.")
 
     # -------------------------------------------------------------------
     # PART 3: MIRROR ENGINE HAND-CALCULATIONS & EDGE CASES

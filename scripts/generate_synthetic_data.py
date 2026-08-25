@@ -138,12 +138,12 @@ def _fake_name(village_key: str, rng: random.Random) -> str:
 
 def _fake_id_hash(name: str, village: str, seq: int) -> str:
     """
-    SHA-256 hash of a synthetic identifier string.
-    NEVER stores actual Aadhaar / PAN — only this hash goes anywhere near a chain record.
-    The synthetic ID format: SYNTH-{village}-{seq:06d} is obviously fictional.
+    Standard full SHA-256 hash (64 hex characters) of a synthetic identifier string.
+    NEVER stores actual Aadhaar / PAN — only this cryptographic hash is written to records.
+    The synthetic ID format: SYNTH-{village}-{seq:06d}-{name} is strictly pseudonymous.
     """
     synthetic_id = f"SYNTH-{village}-{seq:06d}-{name.replace(' ','_')}"
-    return hashlib.sha256(synthetic_id.encode()).hexdigest()[:40]  # truncated for readability
+    return hashlib.sha256(synthetic_id.encode()).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -621,7 +621,7 @@ def generate(
             total = count
             n_mismatch = round(total * 0.15)
             n_dup = round(total * 0.05)
-            n_benami = 5 if village_key == "A" else 0  # benami only in Village A
+            n_benami = 8 if village_key == "A" else 0  # 8 parcels for benami syndicate in Village A
 
             # Pick which sequential IDs get which anomaly
             all_seqs = list(range(1, total + 1))

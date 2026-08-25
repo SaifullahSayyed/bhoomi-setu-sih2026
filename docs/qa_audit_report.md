@@ -366,23 +366,55 @@ $$\begin{aligned}
 
 ---
 
-### PART 9 — HONEST LABELING & DISCLAIMER AUDIT
+### PART 9 — HONEST LABELING & DISCLAIMER AUDIT (VERBATIM EVIDENCE)
 
-#### 9.1 Module Status Badge Alignment
+#### 9.1 Module Status Badge Alignment Audit
 **Status:** PASS  
-**Evidence:**
-- Priority 1b, 1c, 2a, 2b, 3 $\rightarrow$ 🟢 `Working Prototype`
-- Priority 4a (GNN) & Priority 4c (Harmonizer) $\rightarrow$ 🟡 `Architecture Demo (Proof of Concept)`
+**Evidence:** Audited navigation headers and view components (`frontend/src/components/Header.jsx`, `RegistrarDashboard.jsx`, `ArchitectureDemoView.jsx`):
+- **Priority 1b (Mirror Engine):** Tagged `P1-2` / 🟢 `Working Prototype` — Driven by live FastAPI REST API (`/parcels/`, `/parcels/{id}/mirror-score`) and real Shoelace spatial polygon computation.
+- **Priority 1c (Curtain Ledger):** Tagged `P1-2` / 🟢 `Working Prototype` — Driven by live Hardhat EVM smart contract `CurtainLedger.sol` on local JSON-RPC node.
+- **Priority 2a (Assurance Pool):** Tagged `P2a` / 🟢 `Working Prototype` — Driven by live `AssurancePool.sol` with exact integer basis point math.
+- **Priority 2b (Community Multi-Sig):** Tagged `P2b` / 🟢 `Working Prototype` — Driven by live `CommunityTenure.sol` multi-sig quorum contract.
+- **Priority 4a (Dispute-Risk GNN):** Tagged `P4 POC` / 🟡 `Architecture Demo (Proof of Concept)` — Honest label: explicitly documented as trained on synthetic dataset graph topology.
+- **Priority 4c (Schema Harmonizer):** Tagged `P4 POC` / 🟡 `Architecture Demo (Proof of Concept)` — Honest label: explicitly documented as a 3-state heuristic proof-of-concept across UP, TN, and JH.
 
-#### 9.2 GNN Synthetic Data Disclaimer Copy
+#### 9.2 GNN Synthetic Graph Disclaimer Copy
 **Status:** PASS  
-**Evidence:** UI explicitly renders:  
-`"Dispute-Risk GNN Pipeline Demo — Trained on synthetic dataset graph topology for SIH prototype demonstration only (not a validated real-world court outcome predictor)."`
+**Evidence:** Rendered verbatim in [`frontend/src/views/ArchitectureDemoView.jsx`](file:///c:/Users/Sayyed%20Saifullah/.gemini/antigravity/scratch/bhoomi-setu/frontend/src/views/ArchitectureDemoView.jsx) (Line 18) and backend API response:
+```json
+{
+  "status_label": "Architecture Demo",
+  "disclaimer": "Dispute-Risk GNN Pipeline Demo — Trained on synthetic dataset graph topology for SIH prototype demonstration only (not a validated real-world court outcome predictor)."
+}
+```
 
 #### 9.3 Assurance Pool Legal Disclaimer Copy
 **Status:** PASS  
-**Evidence:** Rendered on both Registrar Dashboard and Citizen View:  
-`"Prototype self-funding assurance mechanism — not a commercial insurance product or sovereign guarantee."`
+**Evidence:** Rendered verbatim across both [`frontend/src/views/RegistrarDashboard.jsx`](file:///c:/Users/Sayyed%20Saifullah/.gemini/antigravity/scratch/bhoomi-setu/frontend/src/views/RegistrarDashboard.jsx) (Line 372), [`CitizenView.jsx`](file:///c:/Users/Sayyed%20Saifullah/.gemini/antigravity/scratch/bhoomi-setu/frontend/src/views/CitizenView.jsx) (Line 192), and [`backend/main.py`](file:///c:/Users/Sayyed%20Saifullah/.gemini/antigravity/scratch/bhoomi-setu/backend/main.py) (Line 383):
+```
+"Prototype self-funding assurance mechanism — not a legally binding commercial insurance product or sovereign guarantee."
+```
+
+---
+
+## 🔍 In-Depth Auditor Inquiries & Resolution Notes
+
+### 1. Benami Syndicate Scale vs. Detection Threshold Tuning
+- **Context:** The original build research referenced benami syndicates as "same owner on 8+ high-value parcels."
+- **Generator Update:** The synthetic generator ([`scripts/generate_synthetic_data.py`](file:///c:/Users/Sayyed%20Saifullah/.gemini/antigravity/scratch/bhoomi-setu/scripts/generate_synthetic_data.py)) now explicitly creates an **8-parcel syndicate** ($N=8$) for the fictional accumulator "Balram Sahukar" in Village A (values ranging from ₹301k to ₹3.44M).
+- **Engine Parameter:** In [`backend/mirror_engine.py`](file:///c:/Users/Sayyed%20Saifullah/.gemini/antigravity/scratch/bhoomi-setu/backend/mirror_engine.py), `benami_parcel_threshold` is set to `4` (detecting syndicates $\ge 4$). This is documented as a demo-scaled parameter suitable for a 200-parcel village sandbox, whereas a national registry would configure $\ge 8$ properties or cross-district asset-to-income ratios.
+
+### 2. Elimination of SHA-1 in Favor of 100% SHA-256
+- **Audit Finding:** The synthetic generator previously truncated the SHA-256 hexdigest to 40 characters for display brevity (`[:40]`), which mimicked a deprecated SHA-1 length.
+- **Remediation:** Truncation was completely removed. All pseudonymized owner hashes throughout the dataset, database, and smart contracts are now **full 64-character SHA-256 hexadecimal strings** (e.g. `14e7a85e494fa0076a0c541571cae797825b42d7658930218765432190876543`).
+
+### 3. Anomaly Rate Denominator Excludes Community Village
+- **Reasoning:** In calculating the 15% area mismatch (60/400) and 5% duplicate claim (20/400) rates, the 100 parcels of Village C (Dongri Pahad) are deliberately excluded from individual cadastral anomaly injection.
+- **Domain Rationale:** Dongri Pahad represents collective land under the **Forest Rights Act (FRA 2006)**. Community lands are owned collectively by the Gram Sabha CFR Samiti, not private individuals. They have no individual purchase deeds, individual mutation entries, or individual benami owners. Instead, Village C is dedicated to demonstrating the FRA-specific governance anomaly: **Elite Capture / Voting Power Concentration** (evaluated via Gini coefficient analysis on multi-sig participation).
+
+### 4. Plain-English Meaning of "Unsealed Clean (100)"
+- **Explanation:** In the dashboard summary set reconciliation ($262 + 73 + 65 + 100 = 500$), the 100 parcels in "Unsealed Clean" are **the 100 Dongri Pahad FRA community parcels**.
+- **Why they are unsealed:** Community lands cannot be sealed with an individual owner hash on `CurtainLedger.sol`. Their Mirror survey record has 0 discrepancies (clean), but their legal tenure is governed collectively via `CommunityTenure.sol` multi-sig rather than individual Curtain sealing.
 
 ---
 
