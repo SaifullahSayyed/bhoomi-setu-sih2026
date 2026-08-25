@@ -31,9 +31,9 @@ from mirror_engine import (
 )
 
 
-# ---------------------------------------------------------------------------
-# UNIT CONVERSION
-# ---------------------------------------------------------------------------
+                                                                             
+                 
+                                                                             
 
 def test_unit_to_hectares_bigha():
     assert abs(UNIT_TO_HECTARES["bigha"] - 0.2529) < 1e-6
@@ -49,9 +49,9 @@ def test_normalise_unit_alias():
     assert normalise_unit("hect") == "hectares"
 
 
-# ---------------------------------------------------------------------------
-# TEXT PARSING
-# ---------------------------------------------------------------------------
+                                                                             
+              
+                                                                             
 
 def test_parse_ror_hindi_area():
     text = "ULPIN: UP001 | स्वामी: राम | क्षेत्रफल: 2.500 bigha | निर्भार | [OCR-simulated]"
@@ -76,9 +76,9 @@ def test_parse_ror_missing_area():
     assert unit is None
 
 
-# ---------------------------------------------------------------------------
-# POLYGON AREA CALCULATION
-# ---------------------------------------------------------------------------
+                                                                             
+                          
+                                                                             
 
 def test_polygon_area_known_square():
     """
@@ -86,7 +86,7 @@ def test_polygon_area_known_square():
     (0.009° lat × 111000 m/°) × (0.009° lon × 111000*cos(20°) m/°) ≈ 10000 m² = 1 ha
     """
     lat, lon = 20.0, 78.0
-    side = 0.0009  # 0.0009 deg ≈ 100 m; 100m x 100m ≈ 10,000 m² = 1 ha
+    side = 0.0009                                                      
     polygon = {
         "type": "Polygon",
         "coordinates": [[
@@ -98,7 +98,7 @@ def test_polygon_area_known_square():
         ]]
     }
     area = polygon_area_ha(polygon)
-    # Allow ±20% tolerance due to latitude approximation
+                                                        
     assert 0.8 < area < 1.2, f"Expected ~1 ha, got {area:.4f} ha"
 
 
@@ -107,9 +107,9 @@ def test_polygon_area_invalid():
     assert polygon_area_ha({"type": "Point", "coordinates": [0, 0]}) == 0.0
 
 
-# ---------------------------------------------------------------------------
-# GINI COEFFICIENT — EXACT FORMULA TESTS
-# ---------------------------------------------------------------------------
+                                                                             
+                                        
+                                                                             
 
 def test_gini_perfect_equality():
     """All members participate equally → G = 0"""
@@ -122,7 +122,7 @@ def test_gini_perfect_inequality():
     """One member holds all participation → G approaches 1"""
     values = [0.0] * 9 + [100.0]
     g = gini_coefficient(values)
-    # For n=10, perfect inequality: G = (2×10×100) / (10×100) - 11/10 = 2 - 1.1 = 0.9
+                                                                                     
     assert abs(g - 0.9) < 0.001, f"Expected ~0.9, got {g}"
 
 
@@ -155,9 +155,9 @@ def test_gini_two_values_unequal():
     assert abs(g - 0.5) < 0.001
 
 
-# ---------------------------------------------------------------------------
-# GOVERNANCE HEALTH LABELS
-# ---------------------------------------------------------------------------
+                                                                             
+                          
+                                                                             
 
 def test_health_healthy():
     result = governance_health_label(0.15)
@@ -174,9 +174,9 @@ def test_health_alert():
     assert result["status"] == "alert"
 
 
-# ---------------------------------------------------------------------------
-# MIRROR ENGINE — FULL PARCEL SCORING
-# ---------------------------------------------------------------------------
+                                                                             
+                                     
+                                                                             
 
 def _make_parcel(
     ulpin="UP001",
@@ -233,11 +233,11 @@ def test_score_clean_parcel():
 def test_score_area_mismatch_deduction():
     """Textual area 30% larger than polygon → -30 deduction."""
     engine = MirrorEngine()
-    # Polygon = 0.2529 ha (= 1 bigha); text says 1.3 bigha (+30%)
+                                                                 
     parcel = _make_parcel(area_text=1.3, unit="bigha", area_ha_polygon=0.2529)
     engine.build_index([parcel])
     result = engine.score_parcel(parcel)
-    assert result.mirror_score == 70  # 100 - 30
+    assert result.mirror_score == 70            
     assert any("textual_area_mismatch" in f for f in result.flags)
 
 
@@ -247,7 +247,7 @@ def test_score_no_mutations_deduction():
     parcel = _make_parcel(num_mutations=0)
     engine.build_index([parcel])
     result = engine.score_parcel(parcel)
-    assert result.mirror_score == 85  # 100 - 15
+    assert result.mirror_score == 85            
     assert any("no_mutation_history" in f for f in result.flags)
 
 
@@ -255,12 +255,12 @@ def test_score_duplicate_ulpin():
     """Two parcels with same ULPIN → duplicate flag → -40 on both."""
     engine = MirrorEngine()
     p1 = _make_parcel(ulpin="UP001", area_text=1.0, num_mutations=2)
-    p2 = _make_parcel(ulpin="UP001", area_text=1.0, num_mutations=2)  # same ULPIN!
+    p2 = _make_parcel(ulpin="UP001", area_text=1.0, num_mutations=2)               
     p2["owners"] = [{"name": "Different Owner", "id_hash": "def456", "share_fraction": 1.0}]
     engine.build_index([p1, p2])
     r1 = engine.score_parcel(p1)
     assert any("duplicate_ulpin" in f for f in r1.flags)
-    assert r1.mirror_score <= 60  # at least -40
+    assert r1.mirror_score <= 60                
 
 
 def test_score_benami_flag():
@@ -271,12 +271,12 @@ def test_score_benami_flag():
     for i in range(5):
         p = _make_parcel(ulpin=f"UP{i:03d}", num_mutations=1)
         p["owners"] = [{"name": "Balram Sahukar", "id_hash": shared_hash, "share_fraction": 1.0}]
-        p["declared_value_inr"] = 500_000  # above threshold
+        p["declared_value_inr"] = 500_000                   
         parcels.append(p)
     engine.build_index(parcels)
     result = engine.score_parcel(parcels[0])
     assert any("owner_pattern_flag" in f for f in result.flags)
-    assert result.mirror_score <= 85  # at least -15
+    assert result.mirror_score <= 85                
 
 
 def test_sealing_eligible_boundary():
@@ -284,14 +284,14 @@ def test_sealing_eligible_boundary():
     config = MirrorConfig(sealing_threshold=85)
     engine = MirrorEngine(config)
 
-    # Score 85: no mutation history (-15) → 85, exactly at threshold
+                                                                    
     p85 = _make_parcel(num_mutations=0)
     engine.build_index([p85])
     r85 = engine.score_parcel(p85)
     assert r85.mirror_score == 85
     assert r85.sealing_eligible is True
 
-    # Score 70: area mismatch (-30) + no mutations (-15) = 55 → not eligible
+                                                                            
     p55 = _make_parcel(area_text=1.5, unit="bigha", area_ha_polygon=0.2529, num_mutations=0)
     engine.build_index([p55])
     r55 = engine.score_parcel(p55)
@@ -306,32 +306,32 @@ def test_score_floored_at_zero_with_multiple_deductions():
     or if deductions sum to over 100, the Mirror Confidence Score is strictly
     clamped at 0 (max(0, 100 - total_deduction)) and never goes negative.
     """
-    # Test with standard config where deductions sum to 100
+                                                           
     engine = MirrorEngine(MirrorConfig(benami_parcel_threshold=1, benami_value_threshold=10_000))
     shared_hash = "super_benami_hash"
     p1 = _make_parcel(
         ulpin="UP_COLLISION",
-        area_text=2.5,  # area mismatch (-30)
+        area_text=2.5,                       
         unit="bigha",
         area_ha_polygon=0.2529,
-        num_mutations=0,  # no mutations (-15)
+        num_mutations=0,                      
     )
     p1["owners"] = [{"name": "Balram Sahukar", "id_hash": shared_hash, "share_fraction": 1.0}]
-    p1["declared_value_inr"] = 1_000_000  # benami (-15)
+    p1["declared_value_inr"] = 1_000_000                
 
-    p2 = _make_parcel(ulpin="UP_COLLISION", num_mutations=0)  # duplicate ulpin collision (-40)
+    p2 = _make_parcel(ulpin="UP_COLLISION", num_mutations=0)                                   
     p2["owners"] = [{"name": "Different Owner", "id_hash": shared_hash, "share_fraction": 1.0}]
     p2["declared_value_inr"] = 1_000_000
 
     engine.build_index([p1, p2])
     result = engine.score_parcel(p1)
 
-    # Total deductions = 30 + 40 + 15 + 15 = 100 -> Score = 0
+                                                             
     assert result.mirror_score == 0
     assert len(result.flags) >= 4
     assert result.sealing_eligible is False
 
-    # Test with custom oversized deductions (summing to 150) to verify strict floor at 0
+                                                                                        
     oversized_config = MirrorConfig(
         deduct_area_mismatch=60,
         deduct_duplicate=60,
@@ -354,7 +354,7 @@ def test_schema_harmonizer_encumbrance_parsing():
 
     harmonizer = SchemaHarmonizer()
 
-    # Active UP loan record
+                           
     up_record = {
         "khasra_no": "231/4",
         "khatedar_naam": "Ram Swaroop Yadav",
@@ -366,7 +366,7 @@ def test_schema_harmonizer_encumbrance_parsing():
     assert canon_up["primary_claimant"] == "Ram Swaroop Yadav"
     assert canon_up["area_hectares"] > 0
 
-    # Clean TN record with 'Nil'
+                                
     tn_record = {
         "survey_no": "42/1B",
         "pattadar_name": "S. Muruganandam",

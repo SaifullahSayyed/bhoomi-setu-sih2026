@@ -40,9 +40,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-# ---------------------------------------------------------------------------
-# UNIT CONVERSION TABLE (must match generate_synthetic_data.py)
-# ---------------------------------------------------------------------------
+                                                                             
+                                                               
+                                                                             
 UNIT_TO_HECTARES: dict[str, float] = {
     "hectares": 1.0,
     "ha": 1.0,
@@ -60,7 +60,7 @@ UNIT_TO_HECTARES: dict[str, float] = {
     "sqm": 0.0001,
 }
 
-# Aliases used in real RoR text (handles transliteration variants)
+                                                                  
 UNIT_ALIASES: dict[str, str] = {
     "biga": "bigha",
     "bigas": "bigha",
@@ -80,28 +80,28 @@ def normalise_unit(raw: str) -> str:
     return UNIT_ALIASES.get(raw, raw)
 
 
-# ---------------------------------------------------------------------------
-# CONFIGURATION (all thresholds configurable via constructor)
-# ---------------------------------------------------------------------------
+                                                                             
+                                                             
+                                                                             
 @dataclass
 class MirrorConfig:
-    area_tolerance: float = 0.10        # 10% — mismatches above this are flagged
-    benami_parcel_threshold: int = 4    # owner appearing on ≥4 parcels triggers flag (demo-scaled; prod uses 8+)
-    benami_value_threshold: float = 250_000.0  # ₹2.5 lakh per parcel minimum
-    sealing_threshold: int = 85         # mirrors CurtainLedger.sol sealingThreshold
+    area_tolerance: float = 0.10                                                 
+    benami_parcel_threshold: int = 4                                                                             
+    benami_value_threshold: float = 250_000.0                                
+    sealing_threshold: int = 85                                                     
 
-    # Score deductions
+                      
     deduct_area_mismatch: int = 30
     deduct_duplicate: int = 40
     deduct_benami: int = 15
     deduct_no_mutation_history: int = 15
 
 
-# ---------------------------------------------------------------------------
-# GEOSPATIAL AREA CALCULATION (Shoelace formula — same as generator)
-# In production this would use pyproj/GeoPandas; shoelace is adequate for
-# prototype-scale polygons over small areas.
-# ---------------------------------------------------------------------------
+                                                                             
+                                                                    
+                                                                         
+                                            
+                                                                             
 def polygon_area_ha(geometry: dict) -> float:
     """
     Computes polygon area in hectares using the Shoelace (Gauss) formula.
@@ -109,12 +109,12 @@ def polygon_area_ha(geometry: dict) -> float:
     """
     if geometry.get("type") != "Polygon":
         return 0.0
-    coords = geometry["coordinates"][0][:-1]   # drop closing repeated vertex
+    coords = geometry["coordinates"][0][:-1]                                 
     n = len(coords)
     if n < 3:
         return 0.0
 
-    # Shoelace
+              
     area_deg2 = 0.0
     for i in range(n):
         x1, y1 = coords[i]
@@ -122,7 +122,7 @@ def polygon_area_ha(geometry: dict) -> float:
         area_deg2 += (x1 * y2 - x2 * y1)
     area_deg2 = abs(area_deg2) / 2.0
 
-    # Convert to m² using mid-latitude scaling (20°N approximation — prototype scope)
+                                                                                     
     lat_m = 111_000.0
     lon_m = 111_000.0 * math.cos(math.radians(20))
     area_m2 = area_deg2 * lat_m * lon_m
@@ -145,20 +145,20 @@ def polygons_overlap(g1: dict, g2: dict, tolerance_ha: float = 0.01) -> bool:
     x1min, y1min, x1max, y1max = bbox(g1)
     x2min, y2min, x2max, y2max = bbox(g2)
 
-    # Check bounding box overlap (with tiny tolerance)
-    tol = 0.0001  # ~11m
+                                                      
+    tol = 0.0001        
     return (x1min < x2max + tol and x1max > x2min - tol and
             y1min < y2max + tol and y1max > y2min - tol)
 
 
-# ---------------------------------------------------------------------------
-# TEXT PARSER — RoR area extraction
-# ---------------------------------------------------------------------------
+                                                                             
+                                   
+                                                                             
 _AREA_PATTERN = re.compile(
     r"(?:area|extent|क्षेत्रफल|kshetrafal)[:\s]*"
-    r"([\d,]+(?:\.\d+)?)"              # numeric value (may have commas)
+    r"([\d,]+(?:\.\d+)?)"                                               
     r"\s*"
-    r"([a-zA-Z\u0900-\u097F]+)",       # unit string (Latin or Devanagari)
+    r"([a-zA-Z\u0900-\u097F]+)",                                          
     re.IGNORECASE | re.UNICODE,
 )
 
@@ -187,9 +187,9 @@ def parse_ror_area(ror_text: str) -> tuple[float | None, str | None]:
         return None, None
 
 
-# ---------------------------------------------------------------------------
-# GINI COEFFICIENT (serves both benami detection and Priority 2b community governance)
-# ---------------------------------------------------------------------------
+                                                                             
+                                                                                      
+                                                                             
 def gini_coefficient(values: list[float]) -> float:
     """
     Computes the Gini coefficient over a list of values.
@@ -209,11 +209,11 @@ def gini_coefficient(values: list[float]) -> float:
     sorted_vals = sorted(values)
     total = sum(sorted_vals)
     if total == 0:
-        return 0.0  # avoid division by zero when all values are 0
+        return 0.0                                                
 
-    weighted_sum = sum((i + 1) * x for i, x in enumerate(sorted_vals))   # i is 0-based here → (i+1) is 1-based
+    weighted_sum = sum((i + 1) * x for i, x in enumerate(sorted_vals))                                         
     g = (2 * weighted_sum) / (n * total) - (n + 1) / n
-    return round(max(0.0, min(1.0, g)), 4)  # clamp to [0, 1] for numerical safety
+    return round(max(0.0, min(1.0, g)), 4)                                        
 
 
 def governance_health_label(gini: float) -> dict[str, str]:
@@ -226,9 +226,9 @@ def governance_health_label(gini: float) -> dict[str, str]:
         return {"status": "alert", "label": "🔴 Alert: Voting power concentrated", "color": "red"}
 
 
-# ---------------------------------------------------------------------------
-# MIRROR SCORE DATACLASS
-# ---------------------------------------------------------------------------
+                                                                             
+                        
+                                                                             
 @dataclass
 class MirrorResult:
     ulpin: str
@@ -239,7 +239,7 @@ class MirrorResult:
     textual_area_ha: float | None
     area_discrepancy_pct: float | None
     sealing_eligible: bool
-    schema_type: str   # "individual" or "community"
+    schema_type: str                                
 
     def to_dict(self) -> dict:
         return {
@@ -255,22 +255,22 @@ class MirrorResult:
         }
 
 
-# ---------------------------------------------------------------------------
-# CORE MIRROR ENGINE CLASS
-# ---------------------------------------------------------------------------
+                                                                             
+                          
+                                                                             
 class MirrorEngine:
     def __init__(self, config: MirrorConfig | None = None) -> None:
         self.config = config or MirrorConfig()
 
-        # Populated once during batch scoring for cross-parcel checks
-        self._ulpin_index: dict[str, list[str]] = {}      # ulpin → [parcel ulpins with same value]
-        self._geometry_index: list[tuple[str, dict]] = [] # [(ulpin, geometry)]
-        self._owner_index: dict[str, list[str]] = {}       # owner_hash → [ulpins]
-        self._value_index: dict[str, float] = {}           # ulpin → declared_value
+                                                                     
+        self._ulpin_index: dict[str, list[str]] = {}                                               
+        self._geometry_index: list[tuple[str, dict]] = []                      
+        self._owner_index: dict[str, list[str]] = {}                              
+        self._value_index: dict[str, float] = {}                                   
 
-    # -----------------------------------------------------------------------
-    # BATCH INDEXING (must be called before scoring if cross-parcel checks matter)
-    # -----------------------------------------------------------------------
+                                                                             
+                                                                                  
+                                                                             
     def build_index(self, parcels: list[dict]) -> None:
         """
         Builds lookup indexes for ULPIN duplicates, spatial overlaps, and
@@ -285,14 +285,14 @@ class MirrorEngine:
         for p in parcels:
             ulpin = p["ulpin"]
 
-            # ULPIN index
+                         
             self._ulpin_index.setdefault(ulpin, []).append(ulpin)
 
-            # Geometry index (for overlap checks)
+                                                 
             if "geometry" in p:
                 self._geometry_index.append((ulpin, p["geometry"]))
 
-            # Owner hash index (benami detection)
+                                                 
             if p.get("schema_type") == "individual":
                 for owner in p.get("owners", []):
                     h = owner.get("id_hash", "")
@@ -300,23 +300,23 @@ class MirrorEngine:
                         self._owner_index.setdefault(h, []).append(ulpin)
                 self._value_index[ulpin] = p.get("declared_value_inr", 0)
 
-    # -----------------------------------------------------------------------
-    # SINGLE PARCEL SCORING
-    # -----------------------------------------------------------------------
+                                                                             
+                           
+                                                                             
     def score_parcel(self, parcel: dict) -> MirrorResult:
         ulpin = parcel["ulpin"]
         schema = parcel.get("schema_type", "individual")
         flags: list[str] = []
         deductions: dict[str, int] = {}
 
-        # Community parcels get a baseline score — the Mirror Engine checks
-        # completeness of the community record, not individual ownership patterns
+                                                                           
+                                                                                 
         if schema == "community":
             return self._score_community(parcel, flags, deductions)
 
-        # ------------------------------------------------------------------
-        # STEP 1: Parse textual area
-        # ------------------------------------------------------------------
+                                                                            
+                                    
+                                                                            
         ror_text = parcel.get("ror_text", "")
         text_val, text_unit = parse_ror_area(ror_text)
 
@@ -326,15 +326,15 @@ class MirrorEngine:
         elif text_val is None:
             flags.append("ror_parse_failed: could not extract area from text")
 
-        # ------------------------------------------------------------------
-        # STEP 2: Compute spatial area from geometry
-        # ------------------------------------------------------------------
+                                                                            
+                                                    
+                                                                            
         geometry = parcel.get("geometry", {})
         spatial_ha = polygon_area_ha(geometry)
 
-        # ------------------------------------------------------------------
-        # STEP 3: Area mismatch check
-        # ------------------------------------------------------------------
+                                                                            
+                                     
+                                                                            
         discrepancy_pct: float | None = None
         if textual_ha and spatial_ha > 0:
             discrepancy_pct = abs(textual_ha - spatial_ha) / spatial_ha
@@ -343,24 +343,24 @@ class MirrorEngine:
                 flags.append(f"textual_area_mismatch: {pct_str}")
                 deductions["area_mismatch"] = self.config.deduct_area_mismatch
 
-        # ------------------------------------------------------------------
-        # STEP 4: Duplicate detection (ULPIN + spatial)
-        # ------------------------------------------------------------------
+                                                                            
+                                                       
+                                                                            
         dup_ulpins = self._ulpin_index.get(ulpin, [])
         if len(dup_ulpins) > 1:
             flags.append(f"duplicate_ulpin_detected: {len(dup_ulpins)} records share this ULPIN")
             deductions["duplicate_claim"] = self.config.deduct_duplicate
         else:
-            # Check spatial overlap with other parcels
+                                                      
             for other_ulpin, other_geom in self._geometry_index:
                 if other_ulpin != ulpin and polygons_overlap(geometry, other_geom):
                     flags.append(f"spatial_overlap_detected: overlaps with {other_ulpin}")
                     deductions.setdefault("duplicate_claim", self.config.deduct_duplicate)
                     break
 
-        # ------------------------------------------------------------------
-        # STEP 5: Benami / owner-pattern flag
-        # ------------------------------------------------------------------
+                                                                            
+                                             
+                                                                            
         for owner in parcel.get("owners", []):
             h = owner.get("id_hash", "")
             owner_ulpins = self._owner_index.get(h, [])
@@ -374,18 +374,18 @@ class MirrorEngine:
                     f"high-value parcels (≥₹{self.config.benami_value_threshold:,.0f})"
                 )
                 deductions["benami_pattern"] = self.config.deduct_benami
-                break  # flag once per parcel
+                break                        
 
-        # ------------------------------------------------------------------
-        # STEP 6: Mutation history completeness
-        # ------------------------------------------------------------------
+                                                                            
+                                               
+                                                                            
         if not parcel.get("mutation_history"):
             flags.append("no_mutation_history: no chain of title recorded")
             deductions["no_mutation_history"] = self.config.deduct_no_mutation_history
 
-        # ------------------------------------------------------------------
-        # STEP 7: Assemble score
-        # ------------------------------------------------------------------
+                                                                            
+                                
+                                                                            
         total_deduction = sum(deductions.values())
         score = max(0, 100 - total_deduction)
 
@@ -441,13 +441,13 @@ class MirrorEngine:
             computed_area_ha=spatial_ha,
             textual_area_ha=None,
             area_discrepancy_pct=None,
-            sealing_eligible=False,  # community parcels use CommunityTenure, not CurtainLedger
+            sealing_eligible=False,                                                            
             schema_type="community",
         )
 
-    # -----------------------------------------------------------------------
-    # GINI COEFFICIENT FOR COMMUNITY GOVERNANCE
-    # -----------------------------------------------------------------------
+                                                                             
+                                               
+                                                                             
     def compute_community_gini(self, voting_history: list[dict], members: list[dict]) -> dict:
         """
         Computes the Gini coefficient of voting participation across community members.
@@ -480,9 +480,9 @@ class MirrorEngine:
             },
         }
 
-    # -----------------------------------------------------------------------
-    # BATCH SCORING
-    # -----------------------------------------------------------------------
+                                                                             
+                   
+                                                                             
     def score_all(self, parcels: list[dict]) -> dict[str, Any]:
         """
         Scores all parcels. Builds index first, then scores each parcel.
@@ -517,9 +517,9 @@ def _count_flags(results: list[MirrorResult]) -> dict[str, int]:
     return counts
 
 
-# ---------------------------------------------------------------------------
-# MODULE-LEVEL CONVENIENCE (used by FastAPI routes)
-# ---------------------------------------------------------------------------
+                                                                             
+                                                   
+                                                                             
 _engine_singleton: MirrorEngine | None = None
 
 

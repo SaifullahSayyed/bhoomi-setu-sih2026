@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Search, Shield, CheckCircle, Clock, AlertCircle, Award, MapPin } from 'lucide-react';
 import ParcelMap from '../components/ParcelMap';
-
 export default function CitizenView({ lang, t, apiBase }) {
   const [searchUlpin, setSearchUlpin] = useState('UP231000000001');
   const [parcelData, setParcelData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const handleSearch = async (e) => {
     e?.preventDefault();
     if (!searchUlpin) return;
@@ -25,10 +23,9 @@ export default function CitizenView({ lang, t, apiBase }) {
       setLoading(false);
     }
   };
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Search Bar */}
+      {}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl text-center space-y-4">
         <h2 className="text-xl font-bold text-slate-100 flex items-center justify-center gap-2">
           <Shield className="w-6 h-6 text-emerald-400" />
@@ -37,7 +34,6 @@ export default function CitizenView({ lang, t, apiBase }) {
         <p className="text-xs text-slate-400 max-w-xl mx-auto">
           Enter your 14-digit Unique Land Parcel Identification Number (ULPIN) to view verified ownership status, cadastral boundary alignment on the GIS map, and title assurance coverage.
         </p>
-
         <form onSubmit={handleSearch} className="flex gap-2 max-w-lg mx-auto">
           <input
             type="text"
@@ -55,7 +51,6 @@ export default function CitizenView({ lang, t, apiBase }) {
             {loading ? 'Searching...' : 'Check Status'}
           </button>
         </form>
-
         <div className="flex justify-center gap-2 text-[11px] text-slate-400">
           <span>Try quick sample:</span>
           <button onClick={() => { setSearchUlpin('UP231000000001'); }} className="text-emerald-400 hover:underline font-mono">UP231000000001</button>
@@ -65,25 +60,22 @@ export default function CitizenView({ lang, t, apiBase }) {
           <button onClick={() => { setSearchUlpin('JH117000000001'); }} className="text-purple-400 hover:underline font-mono">JH117000000001 (FRA Community)</button>
         </div>
       </div>
-
       {error && (
         <div className="bg-rose-950/40 border border-rose-800 text-rose-300 p-4 rounded-xl text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-rose-400" />
           <span>{error}</span>
         </div>
       )}
-
-      {/* Parcel Information Card */}
+      {}
       {parcelData && (
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-6">
-          {/* Status Header */}
+          {}
           <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
             <div>
               <div className="text-xs text-slate-400">Parcel Identification</div>
               <div className="text-2xl font-bold font-mono text-slate-100">{parcelData.parcel.ulpin}</div>
               <div className="text-xs text-slate-400 mt-0.5">{parcelData.parcel.village}, {parcelData.parcel.district}, {parcelData.parcel.state}</div>
             </div>
-
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <div className="text-xs text-slate-400">Torrens Confidence</div>
@@ -106,8 +98,7 @@ export default function CitizenView({ lang, t, apiBase }) {
               </div>
             </div>
           </div>
-
-          {/* Interactive GIS Boundary Map */}
+          {}
           {parcelData.parcel.geometry && (
             <div className="space-y-2">
               <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
@@ -122,8 +113,7 @@ export default function CitizenView({ lang, t, apiBase }) {
               />
             </div>
           )}
-
-          {/* Details Grid */}
+          {}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
               <div className="text-xs text-slate-400">Primary Title Holder</div>
@@ -136,7 +126,6 @@ export default function CitizenView({ lang, t, apiBase }) {
                 ID Hash: {parcelData.parcel.owners?.[0]?.id_hash?.substring(0, 16) || 'FRA-COMMUNITY'}...
               </div>
             </div>
-
             <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
               <div className="text-xs text-slate-400">Registered Land Extent</div>
               <div className="text-sm font-semibold text-slate-100 mt-1">
@@ -146,7 +135,6 @@ export default function CitizenView({ lang, t, apiBase }) {
                 Cadastral Match: {parcelData.mirror_result?.computed_area_ha} Ha (Polygon)
               </div>
             </div>
-
             <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
               <div className="text-xs text-slate-400">Encumbrance & Liabilities</div>
               <div className="text-sm font-semibold text-slate-100 mt-1">
@@ -161,8 +149,7 @@ export default function CitizenView({ lang, t, apiBase }) {
               </div>
             </div>
           </div>
-
-          {/* Chain of Title Timeline */}
+          {}
           {parcelData.parcel.mutation_history?.length > 0 && (
             <div className="space-y-3">
               <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
@@ -183,8 +170,7 @@ export default function CitizenView({ lang, t, apiBase }) {
               </div>
             </div>
           )}
-
-          {/* Title Assurance Protection Banner */}
+          {}
           <div className="bg-emerald-950/30 border border-emerald-800/40 rounded-xl p-4 flex items-center justify-between text-xs text-emerald-300">
             <div>
               <div className="font-semibold flex items-center gap-1.5">

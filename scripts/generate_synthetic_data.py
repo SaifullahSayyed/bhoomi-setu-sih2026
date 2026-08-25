@@ -50,25 +50,25 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-# ---------------------------------------------------------------------------
-# UNIT CONVERSION TABLE (to hectares)
-# Why this table: India uses multiple traditional area units across states.
-# This is exactly the kind of cross-state inconsistency SIH26014 calls out.
-# ---------------------------------------------------------------------------
+                                                                             
+                                     
+                                                                           
+                                                                           
+                                                                             
 UNIT_TO_HECTARES: dict[str, float] = {
     "hectares": 1.0,
     "acres": 0.404686,
-    "bigha": 0.2529,        # 1 UP bigha = 0.2529 ha (varies by state; UP used here)
-    "biswa": 0.012645,      # 1 biswa = 1/20 bigha (UP)
-    "cents": 0.00404686,    # 1 cent = 1/100 acre
-    "grounds": 0.02230,     # 1 ground (TN) ≈ 222.97 sq m = 0.0223 ha
-    "guntha": 0.01012,      # 1 guntha = 1/40 acre
-    "marla": 0.002529,      # 1 marla (Punjab) = 1/160 bigha (approx)
+    "bigha": 0.2529,                                                                
+    "biswa": 0.012645,                                 
+    "cents": 0.00404686,                         
+    "grounds": 0.02230,                                              
+    "guntha": 0.01012,                            
+    "marla": 0.002529,                                               
 }
 
-# ---------------------------------------------------------------------------
-# VILLAGE CONFIGURATION
-# ---------------------------------------------------------------------------
+                                                                             
+                       
+                                                                             
 VILLAGES = {
     "A": {
         "name": "Rampur Khurd",
@@ -110,13 +110,13 @@ VILLAGES = {
         "lon_center": 85.278,
         "lang": "hi",
         "record_style": "fra_community_template",
-        "individual": False,   # COMMUNITY OWNERSHIP — different schema entirely
+        "individual": False,                                                    
     },
 }
 
-# ---------------------------------------------------------------------------
-# FAKE NAME POOLS (clearly synthetic — no real person's name)
-# ---------------------------------------------------------------------------
+                                                                             
+                                                             
+                                                                             
 FIRST_NAMES_HI = ["Ramesh", "Sunita", "Prabha", "Mohan", "Geeta", "Hari", "Kamla",
                    "Vijay", "Savitri", "Ashok", "Pushpa", "Suresh", "Rekha", "Dinesh",
                    "Meena", "Rajesh", "Usha", "Santosh", "Kusum", "Bharat", "Nirmala"]
@@ -146,9 +146,9 @@ def _fake_id_hash(name: str, village: str, seq: int) -> str:
     return hashlib.sha256(synthetic_id.encode()).hexdigest()
 
 
-# ---------------------------------------------------------------------------
-# POLYGON GENERATOR (simple rectangular approximation)
-# ---------------------------------------------------------------------------
+                                                                             
+                                                      
+                                                                             
 def _make_polygon(lat: float, lon: float, area_ha: float, rng: random.Random) -> dict:
     """
     Generates a simple rectangular GeoJSON polygon approximating the given area.
@@ -157,14 +157,14 @@ def _make_polygon(lat: float, lon: float, area_ha: float, rng: random.Random) ->
     1 degree latitude ≈ 111 km → 1 ha ≈ 0.009° latitude side (for a square)
     This is a simplification adequate for prototype spatial checks.
     """
-    side_deg_lat = math.sqrt(area_ha / 100) * 0.009   # rough conversion
+    side_deg_lat = math.sqrt(area_ha / 100) * 0.009                     
     side_deg_lon = side_deg_lat / math.cos(math.radians(lat))
 
-    # Random offset from village center so parcels are spread out
+                                                                 
     offset_lat = rng.uniform(-0.08, 0.08)
     offset_lon = rng.uniform(-0.08, 0.08)
 
-    # Tiny perturbation so each parcel has unique location
+                                                          
     jitter_lat = rng.uniform(-0.005, 0.005)
     jitter_lon = rng.uniform(-0.005, 0.005)
 
@@ -176,7 +176,7 @@ def _make_polygon(lat: float, lon: float, area_ha: float, rng: random.Random) ->
         [base_lon + side_deg_lon, base_lat],
         [base_lon + side_deg_lon, base_lat + side_deg_lat],
         [base_lon,                base_lat + side_deg_lat],
-        [base_lon,                base_lat],   # close ring
+        [base_lon,                base_lat],               
     ]
     return {"type": "Polygon", "coordinates": [coords]}
 
@@ -188,7 +188,7 @@ def _polygon_area_ha(polygon: dict) -> float:
     Formula: A = |Σ(x_i*(y_{i+1} - y_{i-1}))| / 2  (in degree²)
     1 degree² at ~20°N ≈ 10,850 km² → 1,085,000,000 ha (scale factor below)
     """
-    coords = polygon["coordinates"][0][:-1]  # drop closing point
+    coords = polygon["coordinates"][0][:-1]                      
     n = len(coords)
     area_deg2 = 0.0
     for i in range(n):
@@ -197,21 +197,21 @@ def _polygon_area_ha(polygon: dict) -> float:
         area_deg2 += (x1 * y2 - x2 * y1)
     area_deg2 = abs(area_deg2) / 2.0
 
-    # Convert degree² to hectares (approximate at ~20°N latitude)
-    # 1° lat ≈ 111,000 m; 1° lon ≈ 111,000 * cos(lat) m
-    # Using a fixed mid-India latitude of 20°N for prototype simplicity
+                                                                 
+                                                       
+                                                                       
     lat_m_per_deg = 111_000.0
     lon_m_per_deg = 111_000.0 * math.cos(math.radians(20))
     area_m2 = area_deg2 * lat_m_per_deg * lon_m_per_deg
-    return area_m2 / 10_000.0  # m² → ha
+    return area_m2 / 10_000.0           
 
 
-# ---------------------------------------------------------------------------
-# RECORD-OF-RIGHTS TEXT TEMPLATES
-# Simulates what OCR-extracted text from a physical RoR would look like.
-# In production, this is an OCR pipeline output; in this prototype it is
-# structured text generated to match the GeoJSON data (with injected mismatches).
-# ---------------------------------------------------------------------------
+                                                                             
+                                 
+                                                                        
+                                                                        
+                                                                                 
+                                                                             
 def _ror_text_hindi(owner: str, area: float, unit: str, ulpin: str, encumbrance: str) -> str:
     enc_str = f"ऋण भार: {encumbrance}" if encumbrance else "निर्भार"
     return (
@@ -238,16 +238,16 @@ def _ror_text_fra(community: str, area: float, claim_type: str, ulpin: str) -> s
     )
 
 
-# ---------------------------------------------------------------------------
-# MUTATION HISTORY GENERATOR
-# ---------------------------------------------------------------------------
+                                                                             
+                            
+                                                                             
 _MUTATION_TYPES = ["inheritance", "sale", "gift_deed", "court_decree", "partition"]
 
 
 def _gen_mutation_history(rng: random.Random, owner: str, num_events: int) -> list[dict]:
     history = []
     base_date = datetime(2000, 1, 1)
-    prev_owner = _fake_name("A", rng)  # arbitrary prior owner
+    prev_owner = _fake_name("A", rng)                         
     for i in range(num_events):
         days_offset = rng.randint(i * 180, (i + 1) * 365)
         event_date = base_date + timedelta(days=days_offset)
@@ -264,9 +264,9 @@ def _gen_mutation_history(rng: random.Random, owner: str, num_events: int) -> li
     return history
 
 
-# ---------------------------------------------------------------------------
-# INDIVIDUAL PARCEL GENERATOR
-# ---------------------------------------------------------------------------
+                                                                             
+                             
+                                                                             
 def _gen_individual_parcel(
     seq: int,
     village_key: str,
@@ -277,7 +277,7 @@ def _gen_individual_parcel(
     ulpin = f"{vcfg['state_code']}{vcfg['district_code']}{seq:09d}"
     unit = vcfg["primary_unit"]
 
-    # Decide ownership (10% chance of co-ownership)
+                                                   
     if rng.random() < 0.10:
         owner_names = [_fake_name(village_key, rng), _fake_name(village_key, rng)]
         shares = [round(rng.uniform(0.3, 0.7), 2)]
@@ -296,37 +296,37 @@ def _gen_individual_parcel(
     ]
     primary_owner = owner_names[0]
 
-    # Area in primary unit (realistic range per village)
+                                                        
     if unit == "bigha":
         area_base = rng.uniform(0.5, 8.0)
     elif unit == "cents":
         area_base = rng.uniform(10.0, 500.0)
-    else:  # acres
+    else:         
         area_base = rng.uniform(0.25, 5.0)
 
     area_ha_true = area_base * UNIT_TO_HECTARES[unit]
 
-    # --- ANOMALY: AREA MISMATCH ---
-    # Inject a discrepancy between the textual RoR area and the polygon area.
-    # This simulates what happens when a scanned deed uses a different measurement
-    # than the spatial survey — very common in practice.
+                                    
+                                                                             
+                                                                                  
+                                                        
     textual_area = area_base
     if seq in anomalies.get("area_mismatch_seqs", set()):
-        mismatch_pct = rng.uniform(0.12, 0.35)  # 12–35% mismatch (all > 10% threshold)
+        mismatch_pct = rng.uniform(0.12, 0.35)                                         
         direction = rng.choice([-1, 1])
         textual_area = area_base * (1 + direction * mismatch_pct)
 
-    # --- ANOMALY: BENAMI PATTERN ---
-    declared_value = round(area_ha_true * rng.uniform(800_000, 2_500_000), 2)  # ₹/ha
+                                     
+    declared_value = round(area_ha_true * rng.uniform(800_000, 2_500_000), 2)        
     income_stated = 0.0
     if seq in anomalies.get("benami_seqs", set()):
-        # Same hash (reused owner) will be detected by Mirror Engine across many parcels
+                                                                                        
         owners[0]["id_hash"] = anomalies["benami_owner_hash"]
-        income_stated = rng.uniform(50_000, 150_000)   # low income vs. high asset
+        income_stated = rng.uniform(50_000, 150_000)                              
     else:
         income_stated = rng.uniform(100_000, 2_000_000)
 
-    # Encumbrance (20% chance)
+                              
     if rng.random() < 0.20:
         creditor = f"{rng.choice(['SBI','PNB','UCO','Gramin Bank'])} Branch {rng.randint(100,999)}"
         enc_amount = round(declared_value * rng.uniform(0.3, 0.7), 2)
@@ -336,14 +336,14 @@ def _gen_individual_parcel(
         encumbrance = {"mortgaged": False, "creditor": None, "amount_inr": 0}
         enc_str = ""
 
-    # Mutation history (0–4 events)
+                                   
     num_mutations = rng.randint(0, 4)
     mutation_history = _gen_mutation_history(rng, primary_owner, num_mutations)
 
-    # Geometry — use *true* area for the polygon; mismatch is only in the text
+                                                                              
     geometry = _make_polygon(vcfg["lat_center"], vcfg["lon_center"], area_ha_true, rng)
 
-    # RoR text uses *textual* area (which may differ from polygon)
+                                                                  
     if vcfg["record_style"] == "ror_english_template":
         ror_text = _ror_text_english(primary_owner, textual_area, unit, ulpin, enc_str)
     else:
@@ -366,7 +366,7 @@ def _gen_individual_parcel(
         "encumbrance": encumbrance,
         "declared_value_inr": declared_value,
         "income_stated_inr": income_stated,
-        "anomaly_flags_injected": {   # ground truth for testing Mirror Engine
+        "anomaly_flags_injected": {                                           
             "area_mismatch": seq in anomalies.get("area_mismatch_seqs", set()),
             "duplicate_claim": seq in anomalies.get("duplicate_seqs", set()),
             "benami_pattern": seq in anomalies.get("benami_seqs", set()),
@@ -374,14 +374,14 @@ def _gen_individual_parcel(
     }
 
 
-# ---------------------------------------------------------------------------
-# COMMUNITY PARCEL GENERATOR (Dongri Pahad — FRA Village C)
-# Why a separate schema: India's Forest Rights Act (FRA) creates COMMUNITY
-# forest resource rights — the parcel is NOT owned by any individual.
-# Every prior academic solution models land as if it were individually owned.
-# This schema gap is one of the two India-specific structural problems this
-# project exists to address (see Priority 2b — Community Tenure Ledger).
-# ---------------------------------------------------------------------------
+                                                                             
+                                                           
+                                                                          
+                                                                     
+                                                                             
+                                                                           
+                                                                        
+                                                                             
 def _gen_community_parcel(
     seq: int,
     vcfg: dict,
@@ -412,27 +412,27 @@ def _gen_community_parcel(
         "district": vcfg["district"],
         "state": vcfg["state"],
         "village_key": "C",
-        "schema_type": "community",  # NOT 'individual' — distinct schema
+        "schema_type": "community",                                      
         "community_entity": "Dongri Pahad Gram Sabha",
         "fra_claim_type": claim_type,
-        "registered_members": registered_members,   # full list — governance unit
+        "registered_members": registered_members,                                
         "resource_rights": resources,
         "area_textual": round(area_acres, 4),
         "area_unit": "acres",
         "area_ha_textual": round(area_ha, 6),
         "ror_text": ror_text,
         "geometry": geometry,
-        "mutation_history": [],   # community land doesn't have individual mutation chain
+        "mutation_history": [],                                                          
         "encumbrance": {"mortgaged": False, "creditor": None, "amount_inr": 0},
-        "declared_value_inr": 0,  # community land not individually valued
+        "declared_value_inr": 0,                                          
         "income_stated_inr": 0,
         "anomaly_flags_injected": {"area_mismatch": False, "duplicate_claim": False, "benami_pattern": False},
     }
 
 
-# ---------------------------------------------------------------------------
-# COMMUNITY MEMBERS + VOTING HISTORY GENERATOR
-# ---------------------------------------------------------------------------
+                                                                             
+                                              
+                                                                             
 def _gen_community_members(n: int, rng: random.Random) -> list[dict]:
     """
     Generates registered Gram Sabha members with mock Ethereum-style addresses.
@@ -494,16 +494,16 @@ def _gen_voting_history(
         vote_date = base_date + timedelta(days=days_offset)
         action = rng.choice(action_types)
 
-        # Elite-capture bias: first 3 always vote; others with decreasing probability
+                                                                                     
         signers = []
         for m in members:
             idx = m["member_id"] - 1
             if idx < 3:
-                prob = 0.95    # "elite" members — almost always vote
+                prob = 0.95                                          
             elif idx < 6:
-                prob = 0.50    # middle tier
+                prob = 0.50                 
             else:
-                prob = 0.15    # marginalised members rarely participate
+                prob = 0.15                                             
             if rng.random() < prob:
                 signers.append(m["eth_address"])
 
@@ -521,9 +521,9 @@ def _gen_voting_history(
     return history
 
 
-# ---------------------------------------------------------------------------
-# DUPLICATE ANOMALY INJECTOR
-# ---------------------------------------------------------------------------
+                                                                             
+                            
+                                                                             
 def _inject_duplicates(
     parcels: list[dict],
     dup_seqs: set[int],
@@ -538,18 +538,18 @@ def _inject_duplicates(
     if not dup_seqs:
         return parcels
 
-    # Pick source parcels to clone from (not themselves duplicates)
+                                                                   
     source_pool = [p for p in parcels if not p["anomaly_flags_injected"]["duplicate_claim"]]
     for p in parcels:
         if not p["anomaly_flags_injected"]["duplicate_claim"]:
             continue
         source = rng.choice(source_pool)
         if rng.random() < 0.5:
-            # ULPIN collision
+                             
             p["ulpin"] = source["ulpin"]
             p["duplicate_type"] = "ulpin_collision"
         else:
-            # Spatial overlap — copy geometry
+                                             
             p["geometry"] = source["geometry"]
             p["duplicate_type"] = "spatial_overlap"
         p.setdefault("duplicate_type", "ulpin_collision")
@@ -557,9 +557,9 @@ def _inject_duplicates(
     return parcels
 
 
-# ---------------------------------------------------------------------------
-# MAIN GENERATOR
-# ---------------------------------------------------------------------------
+                                                                             
+                
+                                                                             
 def generate(
     village_counts: dict[str, int],
     seed: int,
@@ -576,9 +576,9 @@ def generate(
         print(f"  Generating {count} parcels for Village {village_key}: {vcfg['name']} ...")
 
         if not vcfg["individual"]:
-            # ----------------------------------------------------------------
-            # COMMUNITY VILLAGE (Dongri Pahad)
-            # ----------------------------------------------------------------
+                                                                              
+                                              
+                                                                              
             n_members = 20
             registered_members = _gen_community_members(n_members, rng)
             voting_history = _gen_voting_history(registered_members, 15, rng)
@@ -615,23 +615,23 @@ def generate(
             all_parcels.extend(parcels)
 
         else:
-            # ----------------------------------------------------------------
-            # INDIVIDUAL VILLAGE (Rampur Khurd / Vellore Nagar)
-            # ----------------------------------------------------------------
+                                                                              
+                                                               
+                                                                              
             total = count
             n_mismatch = round(total * 0.15)
             n_dup = round(total * 0.05)
-            n_benami = 8 if village_key == "A" else 0  # 8 parcels for benami syndicate in Village A
+            n_benami = 8 if village_key == "A" else 0                                               
 
-            # Pick which sequential IDs get which anomaly
+                                                         
             all_seqs = list(range(1, total + 1))
             rng.shuffle(all_seqs)
             mismatch_seqs = set(all_seqs[:n_mismatch])
             dup_seqs      = set(all_seqs[n_mismatch:n_mismatch + n_dup])
             benami_seqs   = set(all_seqs[n_mismatch + n_dup:n_mismatch + n_dup + n_benami])
 
-            # Benami owner — same hash across all benami parcels, low income
-            benami_owner_name = "Balram Sahukar"   # fictional character name
+                                                                            
+            benami_owner_name = "Balram Sahukar"                             
             benami_owner_hash = _fake_id_hash(benami_owner_name, village_key, 9999)
 
             anomalies = {
@@ -652,7 +652,7 @@ def generate(
                 )
                 parcels.append(p)
 
-            # Inject duplicate geometry/ULPIN after all parcels are generated
+                                                                             
             parcels = _inject_duplicates(parcels, dup_seqs, rng)
 
             fname_json = f"parcels_village_{village_key}.json"
@@ -666,7 +666,7 @@ def generate(
             }
             (output_dir / fname_json).write_text(json.dumps(village_data, indent=2, ensure_ascii=False), encoding="utf-8")
 
-            # Write CSV (flat view — geometry as WKT string for tabular use)
+                                                                            
             csv_rows = []
             for p in parcels:
                 csv_rows.append({
@@ -703,7 +703,7 @@ def generate(
 
     summary["total_parcels"] = len(all_parcels)
 
-    # Write master summary
+                          
     (output_dir / "dataset_summary.json").write_text(
         json.dumps(summary, indent=2, ensure_ascii=False),
         encoding="utf-8"
@@ -713,9 +713,9 @@ def generate(
     return summary
 
 
-# ---------------------------------------------------------------------------
-# CLI ENTRYPOINT
-# ---------------------------------------------------------------------------
+                                                                             
+                
+                                                                             
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Bhoomi Setu — Synthetic Land Records Dataset Generator"

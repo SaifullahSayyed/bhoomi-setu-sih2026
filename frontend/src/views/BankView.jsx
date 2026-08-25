@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Landmark, CheckCircle, XCircle, Shield, Lock, EyeOff, AlertTriangle } from 'lucide-react';
-
 export default function BankView({ lang, t, apiBase }) {
   const [queryUlpin, setQueryUlpin] = useState('UP231000000001');
   const [collateralState, setCollateralState] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const handleVerify = async (e) => {
     e?.preventDefault();
     if (!queryUlpin) return;
@@ -20,10 +18,9 @@ export default function BankView({ lang, t, apiBase }) {
       setLoading(false);
     }
   };
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header Banner */}
+      {}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-blue-500/20 text-blue-400 rounded-xl border border-blue-500/30">
@@ -36,7 +33,6 @@ export default function BankView({ lang, t, apiBase }) {
             </p>
           </div>
         </div>
-
         <form onSubmit={handleVerify} className="flex gap-2 max-w-lg pt-2">
           <input
             type="text"
@@ -54,8 +50,7 @@ export default function BankView({ lang, t, apiBase }) {
           </button>
         </form>
       </div>
-
-      {/* Curtain Principle Educational Card */}
+      {}
       <div className="bg-blue-950/30 border border-blue-800/40 rounded-xl p-4 flex items-start gap-3 text-xs text-blue-200">
         <EyeOff className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
         <div>
@@ -63,8 +58,7 @@ export default function BankView({ lang, t, apiBase }) {
           {t.curtainPrincipleNote} Lenders do not need 30-year physical title searches. The blockchain Curtain Ledger confirms that the current state was verified by the Mirror Engine and sealed.
         </div>
       </div>
-
-      {/* Collateral Verification Result */}
+      {}
       {collateralState && (
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -86,9 +80,8 @@ export default function BankView({ lang, t, apiBase }) {
               )}
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* What the Bank Sees */}
+            {}
             <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-3">
               <div className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
@@ -113,8 +106,7 @@ export default function BankView({ lang, t, apiBase }) {
                 </div>
               </div>
             </div>
-
-            {/* What is Hidden by the Curtain */}
+            {}
             <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-3">
               <div className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
                 <Lock className="w-4 h-4 text-amber-400" />

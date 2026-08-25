@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Network, Split, AlertCircle, Cpu, FileCode2, CheckCircle2 } from 'lucide-react';
-
 export default function ArchitectureDemoView({ lang, t, apiBase }) {
   const [graphSummary, setGraphSummary] = useState(null);
   const [sampleRisk, setSampleRisk] = useState(null);
   const [harmonizeData, setHarmonizeData] = useState([]);
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     const fetchDemos = async () => {
       setLoading(true);
@@ -28,10 +26,9 @@ export default function ArchitectureDemoView({ lang, t, apiBase }) {
     };
     fetchDemos();
   }, []);
-
   return (
     <div className="space-y-6">
-      {/* Honest Labeling Notice */}
+      {}
       <div className="bg-amber-950/40 border border-amber-800/60 rounded-2xl p-4 text-xs text-amber-200 flex items-start gap-3">
         <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
         <div>
@@ -41,8 +38,7 @@ export default function ArchitectureDemoView({ lang, t, apiBase }) {
           The modules shown below are <strong>Architecture Proof-of-Concepts (POCs)</strong> trained on synthetic representations. They are not claimed to be production-validated machine learning models or universal state adapters.
         </div>
       </div>
-
-      {/* Priority 4a: Dispute-Risk GNN */}
+      {}
       <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
@@ -58,7 +54,6 @@ export default function ArchitectureDemoView({ lang, t, apiBase }) {
             Architecture Demo
           </span>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
           <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800">
             <div className="text-slate-400">Total Graph Nodes</div>
@@ -87,13 +82,11 @@ export default function ArchitectureDemoView({ lang, t, apiBase }) {
             </div>
           </div>
         </div>
-
         <div className="text-[11px] font-mono text-slate-400 bg-slate-950/40 p-2.5 rounded border border-slate-800/80">
           🏷️ <strong>Honesty Label:</strong> {sampleRisk?.honesty_label || 'Prototype pipeline — trained on synthetic data, not a validated real-world accuracy result.'}
         </div>
       </div>
-
-      {/* Priority 4c: Adaptive Schema Harmonizer */}
+      {}
       <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
@@ -109,7 +102,6 @@ export default function ArchitectureDemoView({ lang, t, apiBase }) {
             Proof of Concept
           </span>
         </div>
-
         <div className="space-y-3">
           {harmonizeData.map((item, idx) => (
             <div key={idx} className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3">
@@ -117,9 +109,8 @@ export default function ArchitectureDemoView({ lang, t, apiBase }) {
                 <span>{item.state_source}</span>
                 <span className="text-[10px] text-slate-400 font-mono">Canonical Target: ULPIN Unified</span>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {/* Raw Input */}
+                {}
                 <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 font-mono">
                   <div className="text-[10px] text-slate-400 uppercase font-semibold mb-1 flex items-center gap-1">
                     <FileCode2 className="w-3.5 h-3.5 text-amber-400" />
@@ -129,8 +120,7 @@ export default function ArchitectureDemoView({ lang, t, apiBase }) {
                     {JSON.stringify(item.raw_input, null, 2)}
                   </pre>
                 </div>
-
-                {/* Harmonized Output */}
+                {}
                 <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 font-mono">
                   <div className="text-[10px] text-slate-400 uppercase font-semibold mb-1 flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />

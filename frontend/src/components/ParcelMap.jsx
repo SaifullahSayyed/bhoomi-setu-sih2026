@@ -1,9 +1,6 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, Popup, Tooltip, useMap } from 'react-leaflet';
-
 import { geoJsonToLeafletCoords, getPolygonCenter, getParcelStyle } from '../utils/geoUtils.js';
-
-// Helper to re-center map when selected parcel or village changes
 function MapRecenter({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
@@ -13,9 +10,7 @@ function MapRecenter({ center, zoom }) {
   }, [center, zoom, map]);
   return null;
 }
-
 export { geoJsonToLeafletCoords, getPolygonCenter, getParcelStyle };
-
 export default function ParcelMap({
   parcels = [],
   selectedParcel = null,
@@ -23,10 +18,8 @@ export default function ParcelMap({
   height = '400px',
   villageName = 'All',
 }) {
-  // Determine default center based on selection or village
   let center = [20.5937, 78.9629];
   let zoom = 14;
-
   if (selectedParcel?.geometry) {
     const coords = geoJsonToLeafletCoords(selectedParcel.geometry);
     if (coords.length > 0) {
@@ -44,10 +37,9 @@ export default function ParcelMap({
     else if (villageName === 'Vellore Nagar') center = [12.916, 79.132];
     else if (villageName === 'Dongri Pahad') center = [23.072, 85.278];
   }
-
   return (
     <div className="relative rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-950">
-      {/* Interactive GIS Map Header / Legend */}
+      {}
       <div className="absolute top-3 right-3 z-[1000] bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-lg p-2.5 text-[11px] shadow-lg space-y-1.5 pointer-events-auto">
         <div className="font-bold text-slate-200 border-b border-slate-800 pb-1 flex items-center justify-between gap-2">
           <span>GIS Cadastral Layer</span>
@@ -72,7 +64,6 @@ export default function ParcelMap({
           </div>
         </div>
       </div>
-
       <MapContainer
         center={center}
         zoom={zoom}
@@ -83,19 +74,15 @@ export default function ParcelMap({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-
         <MapRecenter center={center} zoom={zoom} />
-
         {parcels.map((parcel) => {
           if (!parcel.geometry) return null;
           const coords = geoJsonToLeafletCoords(parcel.geometry);
           if (coords.length === 0) return null;
-
           const isSelected = selectedParcel?.ulpin === parcel.ulpin;
           const style = getParcelStyle(parcel, isSelected);
           const score = parcel.mirror_result?.mirror_score ?? 100;
           const isCommunity = parcel.schema_type === 'community';
-
           return (
             <Polygon
               key={parcel.ulpin + (isSelected ? '-selected' : '')}
@@ -124,7 +111,6 @@ export default function ParcelMap({
                   )}
                 </div>
               </Tooltip>
-
               <Popup>
                 <div className="text-xs p-1 space-y-1">
                   <div className="font-bold font-mono text-slate-900">{parcel.ulpin}</div>

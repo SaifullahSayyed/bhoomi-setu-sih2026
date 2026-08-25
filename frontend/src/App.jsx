@@ -6,18 +6,14 @@ import BankView from './views/BankView';
 import CommunityGovernance from './views/CommunityGovernance';
 import ArchitectureDemoView from './views/ArchitectureDemoView';
 import { ShieldCheck, UserCheck, Landmark, Users, Layers, Globe } from 'lucide-react';
-
 const API_BASE = 'http://127.0.0.1:8000';
-
 export default function App() {
   const [activeTab, setActiveTab] = useState('registrar');
   const [lang, setLang] = useState('en');
-
   const t = translations[lang] || translations.en;
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Top Navbar */}
+      {}
       <header className="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -36,9 +32,8 @@ export default function App() {
               <p className="text-[11px] text-slate-400 hidden sm:block">{t.subtitle}</p>
             </div>
           </div>
-
           <div className="flex items-center gap-3">
-            {/* Language Toggle */}
+            {}
             <div className="flex items-center bg-slate-800/80 border border-slate-700/80 rounded-lg p-0.5 text-xs font-semibold">
               <button
                 onClick={() => setLang('en')}
@@ -56,8 +51,7 @@ export default function App() {
           </div>
         </div>
       </header>
-
-      {/* Navigation Tabs Bar */}
+      {}
       <nav className="border-b border-slate-800/60 bg-slate-900/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 overflow-x-auto py-2">
           <button
@@ -72,7 +66,6 @@ export default function App() {
             <span>{t.registrarView}</span>
             <span className="text-[9px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-800">P1–2</span>
           </button>
-
           <button
             onClick={() => setActiveTab('citizen')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
@@ -85,7 +78,6 @@ export default function App() {
             <span>{t.citizenView}</span>
             <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">P3</span>
           </button>
-
           <button
             onClick={() => setActiveTab('bank')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
@@ -98,7 +90,6 @@ export default function App() {
             <span>{t.bankView} (Curtain)</span>
             <span className="text-[9px] bg-blue-950 text-blue-400 px-1.5 py-0.5 rounded border border-blue-800">P3</span>
           </button>
-
           <button
             onClick={() => setActiveTab('community')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
@@ -111,7 +102,6 @@ export default function App() {
             <span>{t.communityView} (FRA)</span>
             <span className="text-[9px] bg-amber-950 text-amber-400 px-1.5 py-0.5 rounded border border-amber-800">P2b</span>
           </button>
-
           <button
             onClick={() => setActiveTab('arch')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
@@ -126,8 +116,7 @@ export default function App() {
           </button>
         </div>
       </nav>
-
-      {/* Main Content Area */}
+      {}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'registrar' && <RegistrarDashboard lang={lang} t={t} apiBase={API_BASE} />}
         {activeTab === 'citizen' && <CitizenView lang={lang} t={t} apiBase={API_BASE} />}
@@ -135,8 +124,7 @@ export default function App() {
         {activeTab === 'community' && <CommunityGovernance lang={lang} t={t} apiBase={API_BASE} />}
         {activeTab === 'arch' && <ArchitectureDemoView lang={lang} t={t} apiBase={API_BASE} />}
       </main>
-
-      {/* Footer Disclaimer */}
+      {}
       <footer className="border-t border-slate-800/80 py-4 bg-slate-950 text-slate-400 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>

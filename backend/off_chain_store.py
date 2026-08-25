@@ -75,7 +75,7 @@ class OffChainStore:
         return (self.store_dir / f"{cid}.json").exists()
 
 
-# Module-level singleton
+                        
 _store_singleton: OffChainStore | None = None
 
 

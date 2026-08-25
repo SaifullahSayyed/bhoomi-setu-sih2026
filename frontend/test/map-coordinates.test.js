@@ -1,33 +1,16 @@
-/**
- * frontend/test/map-coordinates.test.js
- * 
- * Node.js built-in test suite verifying:
- * 1. GeoJSON [lon, lat] -> Leaflet [lat, lon] coordinate inversion accuracy
- * 2. Real-world geographical location placement for all 3 simulated villages (UP, TN, JH)
- * 3. Spatial bounding box containment within actual Indian territory
- * 4. Polygon styling and community tenure visual differentiation
- * 
- * Run with: node --test frontend/test/map-coordinates.test.js
- */
-
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-// Import pure utility functions from geoUtils
 import {
   geoJsonToLeafletCoords,
   getPolygonCenter,
   getParcelStyle,
 } from '../src/utils/geoUtils.js';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, '../../data');
-
-// Ground-truth real-world coordinates for the 3 simulated Indian jurisdictions
 const EXPECTED_VILLAGE_CENTERS = {
   A: {
     name: 'Rampur Khurd',
@@ -35,7 +18,7 @@ const EXPECTED_VILLAGE_CENTERS = {
     state: 'Uttar Pradesh',
     expectedLat: 25.892,
     expectedLon: 81.981,
-    toleranceDeg: 0.15, // within ~16 km of village center
+    toleranceDeg: 0.15, 
   },
   B: {
     name: 'Vellore Nagar',
@@ -54,11 +37,8 @@ const EXPECTED_VILLAGE_CENTERS = {
     toleranceDeg: 0.15,
   },
 };
-
 describe('GIS Coordinate Mapping & Leaflet Real-World Placement', () => {
-
   test('GeoJSON [lon, lat] correctly inverts to Leaflet [lat, lon] format', () => {
-    // GeoJSON polygon for a plot in Pratapgarh (Lon ~81.98, Lat ~25.89)
     const mockGeoJson = {
       type: 'Polygon',
       coordinates: [[
@@ -69,32 +49,23 @@ describe('GIS Coordinate Mapping & Leaflet Real-World Placement', () => {
         [81.9810, 25.8920],
       ]],
     };
-
     const leafletCoords = geoJsonToLeafletCoords(mockGeoJson);
-
     assert.equal(leafletCoords.length, 5, 'Should preserve all 5 polygon vertices');
-    
-    // First vertex in Leaflet must have Latitude as index 0 and Longitude as index 1
     const [firstLat, firstLon] = leafletCoords[0];
     assert.equal(firstLat, 25.8920, 'Latitude must be at index 0 for Leaflet');
     assert.equal(firstLon, 81.9810, 'Longitude must be at index 1 for Leaflet');
-
-    // Centroid calculation
     const [centerLat, centerLon] = getPolygonCenter(leafletCoords);
     assert.ok(Math.abs(centerLat - 25.8930) < 0.001, 'Center latitude must match polygon midpoint');
     assert.ok(Math.abs(centerLon - 81.9820) < 0.001, 'Center longitude must match polygon midpoint');
   });
-
   test('Village A (Rampur Khurd, UP) parcel renders in Pratapgarh, UP', () => {
     const rawData = JSON.parse(
       fs.readFileSync(path.join(DATA_DIR, 'parcels_village_A.json'), 'utf-8')
     );
     const parcel = rawData.parcels[0];
     assert.ok(parcel, 'Village A parcel 0 should exist');
-
     const leafletCoords = geoJsonToLeafletCoords(parcel.geometry);
     const [lat, lon] = getPolygonCenter(leafletCoords);
-
     const cfg = EXPECTED_VILLAGE_CENTERS.A;
     assert.ok(
       Math.abs(lat - cfg.expectedLat) < cfg.toleranceDeg,
@@ -104,22 +75,17 @@ describe('GIS Coordinate Mapping & Leaflet Real-World Placement', () => {
       Math.abs(lon - cfg.expectedLon) < cfg.toleranceDeg,
       `Village A parcel longitude ${lon}° must be near ${cfg.expectedLon}° (Pratapgarh, UP)`
     );
-
-    // Verify coordinates fall inside sovereign Indian geographic bounds (8°N–37°N, 68°E–97°E)
     assert.ok(lat >= 8.0 && lat <= 37.0, 'Latitude must be within India bounds');
     assert.ok(lon >= 68.0 && lon <= 97.0, 'Longitude must be within India bounds');
   });
-
   test('Village B (Vellore Nagar, TN) parcel renders in Vellore, Tamil Nadu', () => {
     const rawData = JSON.parse(
       fs.readFileSync(path.join(DATA_DIR, 'parcels_village_B.json'), 'utf-8')
     );
     const parcel = rawData.parcels[0];
     assert.ok(parcel, 'Village B parcel 0 should exist');
-
     const leafletCoords = geoJsonToLeafletCoords(parcel.geometry);
     const [lat, lon] = getPolygonCenter(leafletCoords);
-
     const cfg = EXPECTED_VILLAGE_CENTERS.B;
     assert.ok(
       Math.abs(lat - cfg.expectedLat) < cfg.toleranceDeg,
@@ -130,17 +96,14 @@ describe('GIS Coordinate Mapping & Leaflet Real-World Placement', () => {
       `Village B parcel longitude ${lon}° must be near ${cfg.expectedLon}° (Vellore, TN)`
     );
   });
-
   test('Village C (Dongri Pahad, JH) community parcel renders in Khunti, Jharkhand with distinct FRA styling', () => {
     const rawData = JSON.parse(
       fs.readFileSync(path.join(DATA_DIR, 'parcels_village_C_community.json'), 'utf-8')
     );
     const parcel = rawData.parcels[0];
     assert.ok(parcel, 'Village C parcel 0 should exist');
-
     const leafletCoords = geoJsonToLeafletCoords(parcel.geometry);
     const [lat, lon] = getPolygonCenter(leafletCoords);
-
     const cfg = EXPECTED_VILLAGE_CENTERS.C;
     assert.ok(
       Math.abs(lat - cfg.expectedLat) < cfg.toleranceDeg,
@@ -150,22 +113,17 @@ describe('GIS Coordinate Mapping & Leaflet Real-World Placement', () => {
       Math.abs(lon - cfg.expectedLon) < cfg.toleranceDeg,
       `Village C parcel longitude ${lon}° must be near ${cfg.expectedLon}° (Khunti, JH)`
     );
-
-    // Verify visual distinction styling for FRA Community land
     const style = getParcelStyle(parcel, false);
     assert.equal(style.dashArray, '6, 6', 'Community land must render with dashed perimeter');
     assert.ok(style.fillColor.includes('7e22ce') || style.fillColor.includes('a855f7') || style.color.includes('9333ea'), 'Community land must render in purple spectrum');
   });
-
   test('Color-coding correctly categorizes by Mirror Confidence Score', () => {
     const highConfParcel = { schema_type: 'individual', mirror_result: { mirror_score: 92 } };
     const midConfParcel  = { schema_type: 'individual', mirror_result: { mirror_score: 75 } };
     const lowConfParcel  = { schema_type: 'individual', mirror_result: { mirror_score: 45 } };
-
     const highStyle = getParcelStyle(highConfParcel, false);
     const midStyle  = getParcelStyle(midConfParcel, false);
     const lowStyle  = getParcelStyle(lowConfParcel, false);
-
     assert.ok(highStyle.color === '#16a34a' && highStyle.fillColor === '#15803d', 'Score 92 must be green spectrum');
     assert.ok(midStyle.color === '#ca8a04' && midStyle.fillColor === '#a16207', 'Score 75 must be yellow spectrum');
     assert.ok(lowStyle.color === '#dc2626' && lowStyle.fillColor === '#b91c1c', 'Score 45 must be red spectrum');

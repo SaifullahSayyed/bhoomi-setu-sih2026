@@ -31,9 +31,9 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-# ---------------------------------------------------------------------------
-# CONTRACT ABI LOADING
-# ---------------------------------------------------------------------------
+                                                                             
+                      
+                                                                             
 def _load_abi(contract_name: str) -> list | None:
     artifacts_dir = Path(__file__).parent.parent / "contracts" / "artifacts" / "contracts"
     abi_path = artifacts_dir / f"{contract_name}.sol" / f"{contract_name}.json"
@@ -50,9 +50,9 @@ def _load_deployments() -> dict:
     return {}
 
 
-# ---------------------------------------------------------------------------
-# WEB3 BRIDGE CLASS
-# ---------------------------------------------------------------------------
+                                                                             
+                   
+                                                                             
 class Web3Bridge:
     """
     Wraps all smart contract interactions. Falls back to simulation mode
@@ -64,7 +64,7 @@ class Web3Bridge:
         self._deployments: dict = {}
         self._contracts: dict = {}
         self._simulation_mode = False
-        self._simulated_state: dict[str, dict] = {}   # in-memory sim state
+        self._simulated_state: dict[str, dict] = {}                        
         self._simulated_pool_balance: float = 0.0
         self._connect()
 
@@ -81,7 +81,7 @@ class Web3Bridge:
             if not self._deployments:
                 raise FileNotFoundError("No deployments.json found — contracts not yet deployed")
 
-            # Load contract instances
+                                     
             for name in ["CurtainLedger", "AssurancePool", "CommunityTenure"]:
                 abi = _load_abi(name)
                 addr = self._deployments.get(name)
@@ -102,9 +102,9 @@ class Web3Bridge:
     def mode(self) -> str:
         return "simulation" if self._simulation_mode else "live"
 
-    # -----------------------------------------------------------------------
-    # CURTAIN LEDGER OPERATIONS
-    # -----------------------------------------------------------------------
+                                                                             
+                               
+                                                                             
     def seal_parcel(
         self,
         ulpin: str,
@@ -127,19 +127,19 @@ class Web3Bridge:
             w3 = self._w3
             admin = w3.eth.accounts[0]
 
-            # Seal on CurtainLedger
+                                   
             tx_hash = ledger.functions.sealParcel(
                 ulpin,
-                owner_id_hash.encode()[:32],  # bytes32
+                owner_id_hash.encode()[:32],           
                 mirror_score,
                 off_chain_cid,
             ).transact({"from": admin})
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
-            # Pay premium on AssurancePool
+                                          
             premium_info = None
             if pool:
-                value_wei = w3.to_wei(declared_value / 1_000_000, "ether")  # scale ₹ → test ETH
+                value_wei = w3.to_wei(declared_value / 1_000_000, "ether")                      
                 premium_tx = pool.functions.payPremium(
                     ulpin, mirror_score, value_wei
                 ).transact({"from": admin, "value": value_wei})
@@ -176,7 +176,7 @@ class Web3Bridge:
         fake_tx = hashlib.sha256(f"{ulpin}{time.time()}".encode()).hexdigest()
         return {
             "success": True,
-            "simulated": True,  # <-- honest label
+            "simulated": True,                    
             "tx_hash": f"0x{fake_tx}",
             "block_number": 1000 + len(self._simulated_state),
             "ulpin": ulpin,
@@ -242,9 +242,9 @@ class Web3Bridge:
         except Exception as e:
             return {"success": False, "simulated": False, "error": str(e)}
 
-    # -----------------------------------------------------------------------
-    # ASSURANCE POOL
-    # -----------------------------------------------------------------------
+                                                                             
+                    
+                                                                             
     def _get_premium_info(self, ulpin: str, mirror_score: int, declared_value: float) -> dict:
         """
         Calculates risk-indexed premium using the exact formula:
@@ -264,7 +264,7 @@ class Web3Bridge:
 
         This is displayed in full in the UI so judges can see the formula working.
         """
-        BASE_RATE = 0.001     # 0.1%
+        BASE_RATE = 0.001           
         K = 0.05
         THRESHOLD = 85
 
@@ -302,7 +302,7 @@ class Web3Bridge:
     def file_claim(self, ulpin: str, claimant_address: str) -> dict:
         """Admin-triggered claim (simulates court/tribunal attestation in production)."""
         if self._simulation_mode:
-            payout = self._simulated_pool_balance * 0.3   # 30% of pool per prototype
+            payout = self._simulated_pool_balance * 0.3                              
             self._simulated_pool_balance = max(0, self._simulated_pool_balance - payout)
             fake_tx = hashlib.sha256(f"claim{ulpin}{time.time()}".encode()).hexdigest()
             return {
@@ -318,7 +318,7 @@ class Web3Bridge:
         try:
             pool = self._contracts["AssurancePool"]
             w3 = self._w3
-            oracle = w3.eth.accounts[1]   # account 1 = oracle
+            oracle = w3.eth.accounts[1]                       
             tx = pool.functions.fileClaim(
                 ulpin, w3.to_checksum_address(claimant_address)
             ).transact({"from": oracle})
@@ -327,9 +327,9 @@ class Web3Bridge:
         except Exception as e:
             return {"success": False, "simulated": False, "error": str(e)}
 
-    # -----------------------------------------------------------------------
-    # COMMUNITY TENURE
-    # -----------------------------------------------------------------------
+                                                                             
+                      
+                                                                             
     def propose_community_action(self, description: str) -> dict:
         if self._simulation_mode:
             action_id = len(self._simulated_state) + 100
@@ -351,7 +351,7 @@ class Web3Bridge:
             return {"success": True, "simulated": True, "action_id": action_id, "member_index": member_index, "tx_hash": f"0x{fake_tx}"}
         try:
             ct = self._contracts["CommunityTenure"]
-            member = self._w3.eth.accounts[2 + member_index]   # accounts 2–21 are members
+            member = self._w3.eth.accounts[2 + member_index]                              
             tx = ct.functions.signAction(action_id).transact({"from": member})
             receipt = self._w3.eth.wait_for_transaction_receipt(tx)
             return {"success": True, "simulated": False, "tx_hash": receipt.transactionHash.hex()}
@@ -395,7 +395,7 @@ class Web3Bridge:
         }
 
 
-# Module-level singleton
+                        
 _bridge_singleton: Web3Bridge | None = None
 
 

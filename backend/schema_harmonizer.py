@@ -40,9 +40,9 @@ CANONICAL TARGET SCHEMA
 import re
 from typing import Any
 
-# ---------------------------------------------------------------------------
-# HEURISTIC FIELD MAPPINGS
-# ---------------------------------------------------------------------------
+                                                                             
+                          
+                                                                             
 FIELD_PATTERNS = {
     "identifier": [r"khasra", r"survey", r"plot", r"ulpin", r"khata"],
     "claimant": [r"khatedar", r"pattadar", r"owner", r"samiti", r"naam", r"name"],
@@ -53,7 +53,7 @@ FIELD_PATTERNS = {
 
 from mirror_engine import UNIT_TO_HECTARES
 
-# Alias to maintain internal compatibility while sharing single source of truth
+                                                                               
 UNIT_FACTORS = UNIT_TO_HECTARES
 
 
@@ -79,12 +79,12 @@ class SchemaHarmonizer:
         if "acre" in f_lower or "decimal" in f_lower:
             return "acres", UNIT_FACTORS["acres"]
 
-        # Heuristic based on numeric magnitude if numeric
+                                                         
         try:
             val = float(sample_val)
-            if val > 50:  # typically cents or sq meters
+            if val > 50:                                
                 return "cents", UNIT_FACTORS["cents"]
-            elif val < 10:  # typically bigha or acres
+            elif val < 10:                            
                 return "acres", UNIT_FACTORS["acres"]
         except (ValueError, TypeError):
             pass
@@ -127,7 +127,7 @@ class SchemaHarmonizer:
                     pass
             elif role == "encumbrance":
                 v_str = str(v).lower().strip()
-                # Negative indicator keywords meaning encumbrance-free
+                                                                      
                 is_free = (
                     v_str in ["nil", "none", "0", "false", "na", "n/a", "no", "null", ""]
                     or "nirbhar" in v_str
@@ -135,7 +135,7 @@ class SchemaHarmonizer:
                     or "shunya" in v_str
                     or "koi nahi" in v_str
                 )
-                # Positive indicators of active debt, loan, creditor, or monetary charge
+                                                                                        
                 has_charge = (
                     "rinn" in v_str
                     or "mortgage" in v_str
@@ -161,9 +161,9 @@ class SchemaHarmonizer:
         return canonical
 
 
-# ---------------------------------------------------------------------------
-# TOY DATASETS FOR DEMONSTRATION
-# ---------------------------------------------------------------------------
+                                                                             
+                                
+                                                                             
 SAMPLE_STATE_RECORDS = {
     "Uttar Pradesh (Bhulekh)": {
         "khasra_no": "231/4",

@@ -88,7 +88,7 @@ class DisputeRiskGNN:
         owners_count = len(parcel.get("owners", []))
         encumbered = parcel.get("encumbrance", {}).get("mortgaged", False)
 
-        # Risk score heuristic simulating GNN output embedding classification
+                                                                             
         risk_score = 0.0
 
         if mirror_score < 75:
@@ -97,15 +97,15 @@ class DisputeRiskGNN:
             risk_score += 0.20
 
         if mutations >= 4:
-            risk_score += 0.25  # rapid turnover in title
+            risk_score += 0.25                           
         if owners_count > 1:
-            risk_score += 0.15  # shared title conflict potential
+            risk_score += 0.15                                   
         if encumbered:
             risk_score += 0.10
         if flags.get("benami_pattern"):
             risk_score += 0.30
 
-        # Clamp risk score 0.0 to 1.0
+                                     
         risk_score = min(1.0, risk_score)
 
         if risk_score >= 0.55:
@@ -137,7 +137,7 @@ class DisputeRiskGNN:
         }
 
 
-# Module-level singleton
+                        
 _gnn_singleton: DisputeRiskGNN | None = None
 
 
