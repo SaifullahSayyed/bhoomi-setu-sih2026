@@ -13,15 +13,18 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
   const [poolBalance, setPoolBalance] = useState(0);
   const [totalDatasetCount, setTotalDatasetCount] = useState(500);
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'map' | 'table'
+  const [apiError, setApiError] = useState(null);
 
   const fetchParcels = async () => {
     setLoading(true);
+    setApiError(null);
     try {
       let url = `${apiBase}/parcels/?limit=500`;
       if (selectedVillage !== 'All') {
         url += `&village=${encodeURIComponent(selectedVillage)}`;
       }
       const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
       setParcels(data.parcels || []);
       if (data.total_dataset_count) {
@@ -32,6 +35,7 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
       }
     } catch (e) {
       console.error(e);
+      setApiError(`Backend API connection failed (${e.message}). Ensure FastAPI server is running on ${apiBase}`);
     } finally {
       setLoading(false);
     }
@@ -83,6 +87,21 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
 
   return (
     <div className="space-y-6">
+      {apiError && (
+        <div className="bg-rose-950/70 border border-rose-600/60 text-rose-200 px-4 py-3 rounded-xl flex items-center justify-between text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>⚠️ {apiError}</span>
+          </div>
+          <button
+            onClick={fetchParcels}
+            className="bg-rose-900/60 hover:bg-rose-800 border border-rose-700 px-2.5 py-1 rounded text-white transition"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
+
       {/* Header Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">

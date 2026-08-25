@@ -51,15 +51,10 @@ FIELD_PATTERNS = {
     "tenure_type": [r"kanoon", r"fra", r"dhara", r"community", r"adhikar"],
 }
 
-UNIT_FACTORS = {
-    "bigha": 0.2529,
-    "cents": 0.00404686,
-    "acre": 0.404686,
-    "acres": 0.404686,
-    "decimal_acre": 0.404686,
-    "hectare": 1.0,
-    "hectares": 1.0,
-}
+from mirror_engine import UNIT_TO_HECTARES
+
+# Alias to maintain internal compatibility while sharing single source of truth
+UNIT_FACTORS = UNIT_TO_HECTARES
 
 
 class SchemaHarmonizer:
