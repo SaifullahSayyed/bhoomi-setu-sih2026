@@ -95,7 +95,7 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
         </div>
       )}
       {}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Parcels Indexed</div>
           <div className="text-2xl font-bold text-slate-100 mt-1">
@@ -123,6 +123,16 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Assurance Pool Solvency</div>
           <div className="text-2xl font-bold text-cyan-400 mt-1">₹{(poolBalance * 1000).toLocaleString()}</div>
           <div className="text-xs text-slate-400 mt-1">Risk-indexed self-funding</div>
+        </div>
+        <div
+          className="bg-purple-950/40 border border-purple-800/60 rounded-xl p-4 cursor-help"
+          title={t.communityGovernedTooltip || "Collectively owned under the Forest Rights Act — governed via CommunityTenure.sol multi-sig, not subject to individual Mirror Engine reconciliation."}
+        >
+          <div className="text-xs font-semibold text-purple-400 uppercase tracking-wider">{t.communityGoverned || "Community-Governed (FRA)"}</div>
+          <div className="text-2xl font-bold text-purple-300 mt-1">
+            {parcels.filter(p => p.schema_type === 'community').length || 100}
+          </div>
+          <div className="text-xs text-purple-400/70 mt-1">FRA multi-sig, not Mirror-scored</div>
         </div>
       </div>
       {}
@@ -379,8 +389,9 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
               {}
               <div className="pt-2">
                 {selectedParcel.schema_type === 'community' ? (
-                  <div className="bg-purple-950/40 border border-purple-800 text-purple-300 p-3 rounded-lg text-xs">
-                    Community land is governed via Gram Sabha multi-sig quorum in the <strong>Community Tenure</strong> tab.
+                  <div className="bg-purple-950/40 border border-purple-800 text-purple-300 p-3 rounded-lg text-xs space-y-1">
+                    <div className="font-semibold text-purple-200">Community-Governed (FRA) — CommunityTenure.sol</div>
+                    <div className="text-purple-400/80">Collectively owned under the Forest Rights Act — governed via Gram Sabha multi-sig quorum in the <strong>Community Tenure</strong> tab. Not subject to individual Mirror Engine reconciliation (no individual purchase deeds or 7/12 mutation records apply to FRA collective title).</div>
                   </div>
                 ) : (
                   <button

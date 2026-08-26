@@ -23,6 +23,8 @@ export const translations = {
     giniHealth: "Governance Health (Gini)",
     offlineBatch: "Simulate Offline Vote Sync",
     fraudClaim: "Trigger Assurance Claim",
+    communityGoverned: "Community-Governed (FRA)",
+    communityGovernedTooltip: "Collectively owned under the Forest Rights Act — governed via CommunityTenure.sol multi-sig, not subject to individual Mirror Engine reconciliation.",
   },
   hi: {
     appTitle: "भूमि सेतु",
@@ -48,5 +50,8 @@ export const translations = {
     giniHealth: "शासन स्वास्थ्य (गिनी गुणांक)",
     offlineBatch: "ऑफ़लाइन मत सिंक का अनुकरण",
     fraudClaim: "धोखाधड़ी आश्वासन दावा",
+    communityGoverned: "सामुदायिक-शासित (वन अधिकार अधिनियम)",
+    communityGovernedTooltip: "वन अधिकार अधिनियम के तहत सामूहिक स्वामित्व — CommunityTenure.sol मल्टी-सिग द्वारा शासित, व्यक्तिगत दर्पण इंजन सत्यापन के अधीन नहीं।",
   }
 };
+

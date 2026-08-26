@@ -181,29 +181,26 @@ def _make_polygon(lat: float, lon: float, area_ha: float, rng: random.Random) ->
     return {"type": "Polygon", "coordinates": [coords]}
 
 
-def _polygon_area_ha(polygon: dict) -> float:
-    """
-    Shoelace formula for approximate polygon area in hectares.
-    Adequate for small parcels; a full prototype would use pyproj/GeoPandas.
-    Formula: A = |Σ(x_i*(y_{i+1} - y_{i-1}))| / 2  (in degree²)
-    1 degree² at ~20°N ≈ 10,850 km² → 1,085,000,000 ha (scale factor below)
-    """
-    coords = polygon["coordinates"][0][:-1]                      
-    n = len(coords)
-    area_deg2 = 0.0
-    for i in range(n):
-        x1, y1 = coords[i]
-        x2, y2 = coords[(i + 1) % n]
-        area_deg2 += (x1 * y2 - x2 * y1)
-    area_deg2 = abs(area_deg2) / 2.0
+import pyproj
+import shapely.geometry
 
-                                                                 
-                                                       
-                                                                       
-    lat_m_per_deg = 111_000.0
-    lon_m_per_deg = 111_000.0 * math.cos(math.radians(20))
-    area_m2 = area_deg2 * lat_m_per_deg * lon_m_per_deg
-    return area_m2 / 10_000.0           
+
+def _polygon_area_ha(polygon: dict) -> float:
+    if not polygon or polygon.get("type") != "Polygon":
+        return 0.0
+    coords = polygon.get("coordinates", [[]])[0]
+    if len(coords) < 4:
+        return 0.0
+    lons = [c[0] for c in coords]
+    avg_lon = sum(lons) / len(lons)
+    zone = max(1, min(60, math.floor((avg_lon + 180.0) / 6.0) + 1))
+    epsg = f"EPSG:326{zone:02d}"
+    try:
+        transformer = pyproj.Transformer.from_crs("EPSG:4326", epsg, always_xy=True)
+        proj = [transformer.transform(c[0], c[1]) for c in coords]
+        return round(shapely.geometry.Polygon(proj).area / 10_000.0, 6)
+    except Exception:
+        return 0.0           
 
 
                                                                              

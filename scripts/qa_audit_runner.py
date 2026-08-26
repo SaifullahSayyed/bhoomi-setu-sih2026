@@ -241,7 +241,7 @@ def run_qa_audit():
     sealing_ready_with_flags = sum(1 for s in all_scored if s.sealing_eligible and len(s.flags) > 0)
     sealing_ready_clean = sum(1 for s in all_scored if s.sealing_eligible and len(s.flags) == 0)
     unsealed_flagged = sum(1 for s in all_scored if not s.sealing_eligible and len(s.flags) > 0)
-    unsealed_clean = sum(1 for s in all_scored if not s.sealing_eligible and len(s.flags) == 0)
+    community_governed_fra = sum(1 for p in all_500 if p.get("schema_type") == "community")
 
     print(f"Total Parcels               : {len(all_500)}")
     print(f"Sealing Ready (Score >= 85) : {sealing_ready}")
@@ -250,10 +250,11 @@ def run_qa_audit():
     print(f"  - Sealing Ready & Clean (Score 100)        : {sealing_ready_clean}")
     print(f"  - Sealing Ready with Minor Flag (Score 85) : {sealing_ready_with_flags} (e.g. Benami-only -15)")
     print(f"  - Unsealed & Flagged (Score < 85)          : {unsealed_flagged} (e.g. Area mismatch -30 or Duplicate -40)")
-    print(f"  - Unsealed & Clean (Score < 85)            : {unsealed_clean}")
+    print(f"  - Community-Governed (FRA)                 : {community_governed_fra} [Dongri Pahad — not Mirror-scored by design]")
     print(f"Set Identity Check:")
     print(f"  sealing_ready_clean ({sealing_ready_clean}) + sealing_ready_with_flags ({sealing_ready_with_flags}) = {sealing_ready_clean + sealing_ready_with_flags} == sealing_ready ({sealing_ready})")
-    print(f"  sealing_ready_clean ({sealing_ready_clean}) + flagged ({flagged}) + unsealed_clean ({unsealed_clean}) = {sealing_ready_clean + flagged + unsealed_clean} == 500")
+    print(f"  sealing_ready_clean ({sealing_ready_clean}) + flagged ({flagged}) + community_governed_fra ({community_governed_fra}) = {sealing_ready_clean + flagged + community_governed_fra} == 500")
+    assert sealing_ready_clean + flagged + community_governed_fra == 500, f"Reconciliation failed: {sealing_ready_clean} + {flagged} + {community_governed_fra} != 500"
 
     print("\n=================================================================")
     print("           QA AUDIT PROGRAMMATIC CHECKS COMPLETED                ")

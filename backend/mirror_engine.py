@@ -39,10 +39,9 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+import pyproj
+import shapely.geometry
 
-                                                                             
-                                                               
-                                                                             
 UNIT_TO_HECTARES: dict[str, float] = {
     "hectares": 1.0,
     "ha": 1.0,
@@ -102,53 +101,55 @@ class MirrorConfig:
                                                                          
                                             
                                                                              
+def utm_zone_from_lon(lon: float) -> int:
+    zone = math.floor((lon + 180.0) / 6.0) + 1
+    return max(1, min(60, zone))
+
+
 def polygon_area_ha(geometry: dict) -> float:
-    """
-    Computes polygon area in hectares using the Shoelace (Gauss) formula.
-    Handles GeoJSON Polygon with a single outer ring.
-    """
-    if geometry.get("type") != "Polygon":
+    if not geometry or geometry.get("type") != "Polygon":
         return 0.0
-    coords = geometry["coordinates"][0][:-1]                                 
-    n = len(coords)
-    if n < 3:
+    coords = geometry.get("coordinates")
+    if not coords or not coords[0]:
+        return 0.0
+    ring = coords[0]
+    if len(ring) < 4:
         return 0.0
 
-              
-    area_deg2 = 0.0
-    for i in range(n):
-        x1, y1 = coords[i]
-        x2, y2 = coords[(i + 1) % n]
-        area_deg2 += (x1 * y2 - x2 * y1)
-    area_deg2 = abs(area_deg2) / 2.0
+    lons = [c[0] for c in ring]
+    avg_lon = sum(lons) / len(lons)
+    zone = utm_zone_from_lon(avg_lon)
+    epsg_code = f"EPSG:326{zone:02d}"
 
-                                                                                     
-    lat_m = 111_000.0
-    lon_m = 111_000.0 * math.cos(math.radians(20))
-    area_m2 = area_deg2 * lat_m * lon_m
-    return area_m2 / 10_000.0
+    try:
+        transformer = pyproj.Transformer.from_crs("EPSG:4326", epsg_code, always_xy=True)
+        projected_coords = [transformer.transform(c[0], c[1]) for c in ring]
+        poly = shapely.geometry.Polygon(projected_coords)
+        area_sqm = poly.area
+        return round(area_sqm / 10_000.0, 6)
+    except Exception:
+        return 0.0
 
 
 def polygons_overlap(g1: dict, g2: dict, tolerance_ha: float = 0.01) -> bool:
-    """
-    Rough bounding-box overlap check. Adequate for prototype duplicate detection.
-    In production this would use Shapely's intersection().
-    """
-    def bbox(g: dict) -> tuple[float, float, float, float]:
-        coords = g["coordinates"][0]
-        lons = [c[0] for c in coords]
-        lats = [c[1] for c in coords]
-        return min(lons), min(lats), max(lons), max(lats)
-
-    if g1.get("type") != "Polygon" or g2.get("type") != "Polygon":
+    if not g1 or not g2 or g1.get("type") != "Polygon" or g2.get("type") != "Polygon":
         return False
-    x1min, y1min, x1max, y1max = bbox(g1)
-    x2min, y2min, x2max, y2max = bbox(g2)
+    try:
+        p1 = shapely.geometry.shape(g1)
+        p2 = shapely.geometry.shape(g2)
+        return bool(p1.intersects(p2) and (p1.intersection(p2).area > 0 or p1.equals(p2)))
+    except Exception:
+        def bbox(g: dict) -> tuple[float, float, float, float]:
+            coords = g["coordinates"][0]
+            lons = [c[0] for c in coords]
+            lats = [c[1] for c in coords]
+            return min(lons), min(lats), max(lons), max(lats)
 
-                                                      
-    tol = 0.0001        
-    return (x1min < x2max + tol and x1max > x2min - tol and
-            y1min < y2max + tol and y1max > y2min - tol)
+        x1min, y1min, x1max, y1max = bbox(g1)
+        x2min, y2min, x2max, y2max = bbox(g2)
+        tol = 0.0001
+        return (x1min < x2max + tol and x1max > x2min - tol and
+                y1min < y2max + tol and y1max > y2min - tol)
 
 
                                                                              

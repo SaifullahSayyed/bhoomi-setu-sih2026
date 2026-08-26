@@ -189,13 +189,15 @@ def _make_parcel(
 ):
     if owners is None:
         owners = [{"name": "Test Owner", "id_hash": "abc123", "share_fraction": 1.0}]
-    geo_side = math.sqrt(area_ha_polygon / 100) * 0.009
     lat, lon = 25.0, 81.0
+    side_m = math.sqrt(area_ha_polygon * 10_000.0)
+    dlat = side_m / 111_000.0
+    dlon = side_m / (111_000.0 * math.cos(math.radians(lat)))
     geometry = {
         "type": "Polygon",
         "coordinates": [[
-            [lon, lat], [lon + geo_side, lat], [lon + geo_side, lat + geo_side],
-            [lon, lat + geo_side], [lon, lat]
+            [lon, lat], [lon + dlon, lat], [lon + dlon, lat + dlat],
+            [lon, lat + dlat], [lon, lat]
         ]]
     }
     mutations = [{"seq": i, "date": "2020-01-01", "event_type": "sale",
