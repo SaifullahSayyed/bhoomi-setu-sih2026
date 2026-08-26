@@ -555,14 +555,82 @@ def get_graph_summary() -> dict:
 
 @app.get("/harmonize/demo", tags=["harmonize"])
 def get_harmonize_demo() -> dict:
-    """
-    Priority 4c — Adaptive Schema Harmonizer Proof of Concept.
-    Label: Proof of concept across 3 mock state formats (UP, TN, JH).
-    """
     from schema_harmonizer import run_demo
     return {
         "status_label": "Architecture Demo (Proof of Concept)",
         "demonstration_records": run_demo(),
         "disclaimer": "Proof-of-concept demonstration across 3 mock state formats only.",
     }
+
+
+@app.get("/shapefile/status", tags=["shapefile"])
+def get_shapefile_status() -> dict:
+    try:
+        from shapefile_ingest import is_shapefile_support_available
+        available = is_shapefile_support_available()
+    except Exception:
+        available = False
+    return {
+        "status_label": "Architecture Demo (Extended Capability)",
+        "available": available,
+        "engine": "GeoPandas / pyogrio (GDAL)" if available else "Unavailable",
+        "sample_shapefile_path": "data/mock_gov_export/svamitva_drone_survey_parcels.shp",
+    }
+
+
+@app.get("/shapefile/import-sample", tags=["shapefile"])
+def import_sample_shapefile() -> dict:
+    try:
+        from shapefile_ingest import ingest_shapefile, is_shapefile_support_available
+        if not is_shapefile_support_available():
+            return {
+                "success": False,
+                "status_label": "Architecture Demo (Extended Capability)",
+                "status": "unavailable",
+                "message": "Extended geospatial capability (GeoPandas/pyogrio) is not installed in the active environment. Install backend/requirements-geo-extended.txt to enable Shapefile ingestion.",
+                "parcels": [],
+                "count": 0,
+            }
+
+        shp_path = Path(__file__).parent.parent / "data" / "mock_gov_export" / "svamitva_drone_survey_parcels.shp"
+        if not shp_path.exists():
+            import sys
+            scripts_dir = Path(__file__).parent.parent / "scripts"
+            if str(scripts_dir) not in sys.path:
+                sys.path.insert(0, str(scripts_dir))
+            from generate_mock_shapefile import generate_mock_shapefile
+            generate_mock_shapefile()
+
+        ingest_res = ingest_shapefile(str(shp_path))
+        if not ingest_res.get("success"):
+            return {
+                "status_label": "Architecture Demo (Extended Capability)",
+                **ingest_res
+            }
+
+        engine = get_engine()
+        scored_parcels = []
+        for p in ingest_res.get("parcels", []):
+            score_res = engine.score_parcel(p)
+            p_scored = {**p, "mirror_result": score_res.to_dict()}
+            scored_parcels.append(p_scored)
+
+        return {
+            "status_label": "Architecture Demo (Extended Capability)",
+            "success": True,
+            "count": len(scored_parcels),
+            "source_format": "Government Esri Shapefile (.shp/.dbf/.shx/SVAMITVA)",
+            "message": f"Successfully ingested and Mirror-scored {len(scored_parcels)} parcels from SVAMITVA Shapefile export.",
+            "parcels": scored_parcels,
+        }
+    except Exception as e:
+        return {
+            "status_label": "Architecture Demo (Extended Capability)",
+            "success": False,
+            "status": "error",
+            "message": f"Error during Shapefile ingestion: {str(e)}",
+            "parcels": [],
+            "count": 0,
+        }
+
 

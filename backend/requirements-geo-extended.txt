@@ -1,0 +1,7 @@
+# Bhoomi Setu — Extended Geospatial Dependencies (Optional / Architecture Demo)
+# Priority 4 / Extended Capabilities (Shapefile Ingestion & Bulk Vectorized Spatial Indexing)
+# Install via: pip install -r backend/requirements-geo-extended.txt
+
+geopandas>=1.0.0
+pyogrio>=0.9.0
+pyshp>=3.0.0

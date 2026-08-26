@@ -46,6 +46,7 @@ Most existing hackathon and academic solutions mistakenly treat blockchain purel
 | **Unified Web Interface** | Priority 3 | React 18 + Tailwind CSS + Lucide with 4 role views (Sub-Registrar, Citizen, Bank, Community) and English/Hindi i18n | 🟢 **Working Prototype** |
 | **Dispute-Risk GNN Pipeline** | Priority 4a | Graph topology extractor + multi-factor risk inference pipeline | 🟡 **Architecture Demo** *(Trained on synthetic graph data)* |
 | **Adaptive Schema Harmonizer** | Priority 4c | Heuristic cross-state mapping across UP, TN, and JH revenue schemas | 🟡 **Architecture Demo** *(3-state proof-of-concept)* |
+| **Government Shapefile Ingestion & Spatial Indexing** | Priority 4d | Ingestion of official SVAMITVA `.shp`/`.dbf` shapefiles via GeoPandas/pyogrio + Vectorized R-Tree spatial indexing (`sindex`) | 🟡 **Architecture Demo (Extended Capability)** |
 
 ---
 
