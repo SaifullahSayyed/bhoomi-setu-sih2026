@@ -134,22 +134,33 @@ def polygon_area_ha(geometry: dict) -> float:
 def polygons_overlap(g1: dict, g2: dict, tolerance_ha: float = 0.01) -> bool:
     if not g1 or not g2 or g1.get("type") != "Polygon" or g2.get("type") != "Polygon":
         return False
+
+    c1 = g1.get("coordinates", [[]])[0]
+    c2 = g2.get("coordinates", [[]])[0]
+    if len(c1) < 4 or len(c2) < 4:
+        return False
+
+    lons1 = [pt[0] for pt in c1]
+    lats1 = [pt[1] for pt in c1]
+    lons2 = [pt[0] for pt in c2]
+    lats2 = [pt[1] for pt in c2]
+
+    minx1, maxx1 = min(lons1), max(lons1)
+    miny1, maxy1 = min(lats1), max(lats1)
+    minx2, maxx2 = min(lons2), max(lons2)
+    miny2, maxy2 = min(lats2), max(lats2)
+
+    tol = 0.0001
+    if not (minx1 < maxx2 + tol and maxx1 > minx2 - tol and
+            miny1 < maxy2 + tol and maxy1 > miny2 - tol):
+        return False
+
     try:
         p1 = shapely.geometry.shape(g1)
         p2 = shapely.geometry.shape(g2)
         return bool(p1.intersects(p2) and (p1.intersection(p2).area > 0 or p1.equals(p2)))
     except Exception:
-        def bbox(g: dict) -> tuple[float, float, float, float]:
-            coords = g["coordinates"][0]
-            lons = [c[0] for c in coords]
-            lats = [c[1] for c in coords]
-            return min(lons), min(lats), max(lons), max(lats)
-
-        x1min, y1min, x1max, y1max = bbox(g1)
-        x2min, y2min, x2max, y2max = bbox(g2)
-        tol = 0.0001
-        return (x1min < x2max + tol and x1max > x2min - tol and
-                y1min < y2max + tol and y1max > y2min - tol)
+        return True
 
 
                                                                              
