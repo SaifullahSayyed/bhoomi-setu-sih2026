@@ -608,10 +608,13 @@ def import_sample_shapefile() -> dict:
                 **ingest_res
             }
 
-        engine = get_engine()
+        ingested_list = ingest_res.get("parcels", [])
+        sandbox_engine = MirrorEngine()
+        sandbox_engine.build_index(_load_all_parcels() + ingested_list)
+
         scored_parcels = []
-        for p in ingest_res.get("parcels", []):
-            score_res = engine.score_parcel(p)
+        for p in ingested_list:
+            score_res = sandbox_engine.score_parcel(p)
             p_scored = {**p, "mirror_result": score_res.to_dict()}
             scored_parcels.append(p_scored)
 
