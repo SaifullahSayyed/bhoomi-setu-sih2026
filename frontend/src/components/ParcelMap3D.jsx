@@ -61,7 +61,7 @@ export default function ParcelMap3D({ parcels = [], apiBase }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const [selectedVillage, setSelectedVillage] = useState('A');
-  const [heightScale, setHeightScale] = useState(12);
+  const [heightScale, setHeightScale] = useState(2.5);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [isMapReady, setIsMapReady] = useState(false);
   const [loadError, setLoadError] = useState(null);
@@ -74,9 +74,9 @@ export default function ParcelMap3D({ parcels = [], apiBase }) {
   };
 
   const getParcelHeight = (score, schemaType, scale) => {
-    if (schemaType === 'community') return 12;
+    if (schemaType === 'community') return 8;
     const rawRisk = Math.max(0, 100 - (score ?? 100));
-    return Math.max(4, rawRisk * scale + 4);
+    return Math.max(2, rawRisk * scale + 2);
   };
 
   const toGeoJSON = (parcelList, scale) => {
@@ -307,9 +307,9 @@ export default function ParcelMap3D({ parcels = [], apiBase }) {
           </div>
           <input
             type="range"
-            min="4"
-            max="30"
-            step="2"
+            min="0.5"
+            max="8.0"
+            step="0.5"
             value={heightScale}
             onChange={(e) => setHeightScale(Number(e.target.value))}
             className="w-28 accent-purple-500 cursor-pointer"
@@ -340,25 +340,25 @@ export default function ParcelMap3D({ parcels = [], apiBase }) {
           <div className="space-y-1 text-[11px]">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-emerald-300">
-                <span className="w-2.5 h-2.5 rounded bg-emerald-500"></span> Flat Plinth (0–18m)
+                <span className="w-2.5 h-2.5 rounded bg-emerald-500"></span> Flat Plinth (2–38m)
               </span>
               <span className="font-mono text-slate-400">Score 85–100 (Clean)</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-amber-300">
-                <span className="w-2.5 h-2.5 rounded bg-yellow-500"></span> Moderate (180–360m)
+                <span className="w-2.5 h-2.5 rounded bg-yellow-500"></span> Moderate (40–76m)
               </span>
               <span className="font-mono text-slate-400">Score 70–84 (Minor)</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-rose-300">
-                <span className="w-2.5 h-2.5 rounded bg-rose-500"></span> High Tower (&gt;360m)
+                <span className="w-2.5 h-2.5 rounded bg-rose-500"></span> High Tower (&gt;76m)
               </span>
               <span className="font-mono text-slate-400">Score &lt;70 (Severe)</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-purple-300">
-                <span className="w-2.5 h-2.5 rounded bg-purple-500"></span> Neutral Base (12m)
+                <span className="w-2.5 h-2.5 rounded bg-purple-500"></span> Neutral Base (8m)
               </span>
               <span className="font-mono text-slate-400">FRA Community Land</span>
             </div>
