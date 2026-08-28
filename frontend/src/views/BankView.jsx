@@ -11,6 +11,15 @@ export default function BankView({ lang, t, apiBase }) {
     try {
       const res = await fetch(`${apiBase}/sealed/${queryUlpin.trim()}`);
       const data = await res.json();
+      // Frontend zero-struct guard (defense in depth):
+      // If backend somehow returns found=true with zero score or all-zero hash,
+      // override found to false. A real sealed parcel can never have score 0
+      // (CurtainLedger.sol requires score >= 85 before sealing).
+      const zeroHash = /^0+$/.test(data.owner_identity_hash || '');
+      if (data.found && (data.mirror_score === 0 || zeroHash)) {
+        data.found = false;
+        data._frontend_guard = 'zero_struct_detected';
+      }
       setCollateralState(data);
     } catch (err) {
       console.error(err);

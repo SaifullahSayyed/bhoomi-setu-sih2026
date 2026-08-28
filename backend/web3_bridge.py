@@ -186,7 +186,16 @@ class Web3Bridge:
         }
 
     def get_sealed_state(self, ulpin: str) -> dict:
-        """Reads current sealed state for a parcel (Curtain principle: current state only)."""
+        """Reads current sealed state for a parcel (Curtain principle: current state only).
+
+        IMPORTANT — Zero-struct guard:
+        Solidity returns all-zero field values (0 for uints, bytes32(0) for hashes)
+        for any struct that was never written. A parcel that was never sealed will
+        return is_sealed=False AND mirror_score=0 AND owner_identity_hash=0x0000...
+        We must check is_sealed=True AND mirror_score > 0 AND non-zero hash before
+        treating a record as genuinely sealed. Failure to do so causes a cold-start
+        Hardhat restart to show fake "Sealed" state for every parcel.
+        """
         if self._simulation_mode:
             state = self._simulated_state.get(ulpin)
             if state:
@@ -196,15 +205,39 @@ class Web3Bridge:
         try:
             ledger = self._contracts["CurtainLedger"]
             result = ledger.functions.getCurrentState(ulpin).call()
+
+            # result[5] = is_sealed bool, result[2] = mirror_score (uint8), result[1] = owner bytes32
+            is_sealed_flag = bool(result[5])
+            mirror_score = int(result[2])
+            owner_hash_bytes = result[1]
+            owner_hash_hex = owner_hash_bytes.hex()
+            is_zero_hash = all(b == 0 for b in owner_hash_bytes)
+
+            # Guard: a genuinely sealed parcel MUST have is_sealed=True,
+            # mirror_score > 0 (enforced by require(score >= 85) on-chain),
+            # and a non-zero owner hash. If any of these fail, the parcel
+            # was never actually sealed — return found=False.
+            genuinely_sealed = is_sealed_flag and mirror_score > 0 and not is_zero_hash
+
+            if not genuinely_sealed:
+                return {
+                    "found": False,
+                    "simulated": False,
+                    "ulpin": ulpin,
+                    "_debug_is_sealed_flag": is_sealed_flag,
+                    "_debug_mirror_score": mirror_score,
+                    "_debug_zero_hash": is_zero_hash,
+                }
+
             return {
                 "found": True,
                 "simulated": False,
                 "ulpin": result[0],
-                "owner_identity_hash": result[1].hex(),
-                "mirror_score": result[2],
-                "seal_timestamp": result[3],
+                "owner_identity_hash": owner_hash_hex,
+                "mirror_score": mirror_score,
+                "seal_timestamp": int(result[3]),
                 "off_chain_cid": result[4],
-                "is_sealed": result[5],
+                "is_sealed": True,
             }
         except Exception as e:
             return {"found": False, "simulated": False, "error": str(e)}

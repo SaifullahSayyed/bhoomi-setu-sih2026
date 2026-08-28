@@ -82,12 +82,15 @@ Using `scripts/benchmark_spatial_indexing.py` on the 500-parcel dataset:
 
 | Spatial Overlap Method | Algorithm | Avg Latency (ms) | Overlaps Found | Speedup |
 | :--- | :--- | :--- | :--- | :--- |
-| **Method A: Existing Pairwise** | Iterative Double-Loop ($O(N^2)$) | **4,257.07 ms** | 22 | 1.0x (Baseline) |
-| **Method B: GeoPandas `sindex`** | R-Tree Spatial Index ($O(N \log N)$) | **0.91 ms** | 22 | **4,688.51x Faster** ⚡ |
+| **Baseline: Production Pairwise** | Live pipeline `score_all()` + STRtree ($O(N \log N)$) | **166 ms** | 22 | 1.0× (Production Baseline) |
+| **GeoPandas `sindex`** | R-Tree Spatial Index ($O(N \log N)$) | **0.59 ms** | 22 | **281× Faster** ⚡ |
+
+> [!NOTE]
+> **Correction note (2026-08-28):** An earlier draft of this report showed a 4,688× figure based on an unoptimised all-pairs loop baseline, which was not representative of the production code path. The corrected 281× figure is benchmarked against the actual optimised `score_all()` pipeline used in production, measured at 166ms on the 500-parcel dataset. This is the honest, reproducible number.
 
 > [!TIP]
 > **Judge Talking Point:**
-> *"For a single village (200–500 parcels), Bhoomi Setu's lightweight standard engine runs instantly. For national scale (millions of parcels), our optional GeoPandas spatial-index capability accelerates spatial duplicate and boundary overlap queries by over 4,000× without changing any core logic."*
+> *"For a single village (200–500 parcels), Bhoomi Setu's lightweight standard engine runs instantly. For national scale (millions of parcels), our optional GeoPandas spatial-index capability accelerates spatial duplicate and boundary overlap queries by 281× against the production baseline — without changing any core logic."*
 
 ---
 

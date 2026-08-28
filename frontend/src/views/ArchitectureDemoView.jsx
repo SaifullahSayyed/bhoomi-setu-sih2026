@@ -344,8 +344,8 @@ export default function ArchitectureDemoView({ lang, t, apiBase }) {
               </div>
               <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
                 <div className="text-slate-400">Vectorized Spatial Overlap Query</div>
-                <div className="text-sm font-bold text-cyan-400 mt-1">0.91 ms (4,688x faster)</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">GeoPandas R-Tree Spatial Index (sindex)</div>
+                <div className="text-sm font-bold text-cyan-400 mt-1">0.59 ms (281× faster)</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">vs 166ms production duplicate-detection baseline · GeoPandas R-Tree sindex</div>
               </div>
               <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
                 <div className="text-slate-400">Core Isolation & Degradation</div>

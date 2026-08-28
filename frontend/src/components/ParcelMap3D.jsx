@@ -26,15 +26,17 @@ const VILLAGE_PRESETS = {
 const BASEMAP_STYLE = {
   version: 8,
   sources: {
-    'carto-voyager': {
+    'osm-raster': {
       type: 'raster',
+      // Plain OpenStreetMap tiles — same source used by the 2D Leaflet map.
+      // Genuinely free, zero API keys, zero account signup required.
       tiles: [
-        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-        'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-        'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
+        'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
       ],
       tileSize: 256,
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }
   },
   layers: [
@@ -44,18 +46,19 @@ const BASEMAP_STYLE = {
       paint: { 'background-color': '#0f172a' }
     },
     {
-      id: 'carto-voyager-layer',
+      id: 'osm-raster-layer',
       type: 'raster',
-      source: 'carto-voyager',
+      source: 'osm-raster',
       minzoom: 0,
       maxzoom: 20,
       paint: {
         'raster-opacity': 0.85,
-        'raster-contrast': 0.1
+        'raster-contrast': 0.05
       }
     }
   ]
 };
+
 
 export default function ParcelMap3D({ parcels = [], apiBase }) {
   const mapContainerRef = useRef(null);

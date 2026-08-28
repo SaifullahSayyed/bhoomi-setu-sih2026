@@ -106,18 +106,24 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
           </div>
         </div>
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sealing Ready (≥85)</div>
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Clean &amp; Sealable (≥85)</div>
           <div className="text-2xl font-bold text-emerald-400 mt-1">
-            {parcels.filter(p => p.mirror_result?.sealing_eligible).length}
+            {parcels.filter(p => p.mirror_result?.sealing_eligible && !(p.mirror_result?.flags?.length > 0)).length || 0}
           </div>
-          <div className="text-xs text-slate-400 mt-1">Passes Mirror Torrens filter</div>
+          <div className="text-xs text-slate-400 mt-1">Score ≥ 85, zero flags detected</div>
         </div>
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Flagged Discrepancies</div>
+          <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Flagged Parcels</div>
           <div className="text-2xl font-bold text-amber-400 mt-1">
-            {parcels.filter(p => p.mirror_result?.flags?.length > 0).length}
+            {parcels.filter(p => p.mirror_result?.flags?.length > 0 && p.schema_type !== 'community').length || 0}
           </div>
-          <div className="text-xs text-slate-400 mt-1">Area / Duplicate / Benami</div>
+          <div className="text-xs text-slate-400 mt-1">
+            {(() => {
+              const flaggedSealable = parcels.filter(p => p.mirror_result?.flags?.length > 0 && p.mirror_result?.sealing_eligible).length;
+              const flaggedBlocked = parcels.filter(p => p.mirror_result?.flags?.length > 0 && !p.mirror_result?.sealing_eligible && p.schema_type !== 'community').length;
+              return `${flaggedSealable} minor (still sealable) · ${flaggedBlocked} blocked`;
+            })()}
+          </div>
         </div>
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Assurance Pool Solvency</div>
@@ -134,6 +140,7 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
           </div>
           <div className="text-xs text-purple-400/70 mt-1">FRA multi-sig, not Mirror-scored</div>
         </div>
+
       </div>
       {}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
