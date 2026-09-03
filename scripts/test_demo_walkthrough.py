@@ -50,9 +50,15 @@ def main():
     prev_data = res_prev.json()
     print(f"Step 3: Premium Preview for UP231000000001 | Score: {prev_data.get('mirror_score')} | Premium Preview: {prev_data.get('premium_preview', {}).get('calculated_premium_inr')} INR [{step_timings['3_premium_preview']:.2f} ms]")
 
-    # Step 4: Seal Clean Parcel on Curtain Ledger
+    # Step 4: Seal Clean Parcel on Curtain Ledger (requires Registrar RBAC token)
     t0 = time.perf_counter()
-    res_seal = client.post("/seal/UP231000000001", json={"declared_value_inr": 1500000})
+    reg_login = client.post("/auth/login", json={"role": "registrar"}).json()
+    reg_token = reg_login["access_token"]
+    res_seal = client.post(
+        "/seal/UP231000000001",
+        json={"declared_value_inr": 1500000},
+        headers={"Authorization": f"Bearer {reg_token}"},
+    )
     step_timings["4_seal_parcel"] = (time.perf_counter() - t0) * 1000.0
     seal_data = res_seal.json()
     print(f"Step 4: Sealed Parcel UP231000000001 | Sealed: {seal_data.get('sealed')} | On-Chain CID: {seal_data.get('off_chain_cid')} [{step_timings['4_seal_parcel']:.2f} ms]")
@@ -67,9 +73,15 @@ def main():
     print(f"Step 5: Community Tenure Loaded {comm_data.get('member_count')} members | Gini: {gini_data.get('gini')} ({gini_data.get('health_label')}) [{step_timings['5_community_gini']:.2f} ms]")
     assert comm_data.get("member_count") == 20
 
-    # Step 6: Community Quorum Vote Proposal
+    # Step 6: Community Quorum Vote Proposal (requires Community Member RBAC token)
     t0 = time.perf_counter()
-    res_prop = client.post("/community/propose", json={"description": "Authorize community minor forest produce collection plan"})
+    comm_login = client.post("/auth/login", json={"role": "community_member"}).json()
+    comm_token = comm_login["access_token"]
+    res_prop = client.post(
+        "/community/propose",
+        json={"description": "Authorize community minor forest produce collection plan"},
+        headers={"Authorization": f"Bearer {comm_token}"},
+    )
     step_timings["6_propose_vote"] = (time.perf_counter() - t0) * 1000.0
     prop_data = res_prop.json()
     print(f"Step 6: Proposed Action on Community Ledger | Tx: {prop_data.get('on_chain', {}).get('tx_hash')} [{step_timings['6_propose_vote']:.2f} ms]")

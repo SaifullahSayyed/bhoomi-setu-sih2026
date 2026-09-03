@@ -18,10 +18,19 @@ import time
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from auth import (
+    DEMO_PROFILES,
+    DEMO_USERS_BY_USERNAME,
+    LoginRequest,
+    TokenResponse,
+    create_access_token,
+    require_role,
+    get_current_user_optional,
+)
 from mirror_engine import MirrorEngine, MirrorConfig, get_engine
 from off_chain_store import get_store
 from web3_bridge import get_bridge
@@ -174,6 +183,81 @@ def health() -> dict:
     }
 
 
+# ===========================================================================
+# Tier 1 — RBAC Authentication Endpoints
+# ===========================================================================
+
+@app.post("/auth/login", response_model=TokenResponse, tags=["auth"])
+def login(request: LoginRequest) -> dict:
+    """
+    Tier 1 RBAC — Issues a signed JWT access token for role-based authorization.
+    Supports either:
+      1. Quick Demo Login by role: {"role": "registrar" | "community_member" | "bank" | "citizen"}
+      2. Username/Password Login: {"username": "...", "password": "..."}
+    Honesty Label: Prototype RBAC — demo credentials for judging purposes, not a production identity system.
+    """
+    profile = None
+    if request.role and request.role in DEMO_PROFILES:
+        profile = DEMO_PROFILES[request.role]
+    elif request.username and request.password:
+        candidate = DEMO_USERS_BY_USERNAME.get(request.username)
+        if candidate and candidate["password"] == request.password:
+            profile = candidate
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid username or password.",
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provide either a valid 'role' (registrar, community_member, bank, citizen) or 'username' & 'password'.",
+        )
+
+    token = create_access_token(profile)
+    return {
+        "status": "success",
+        "access_token": token,
+        "token_type": "bearer",
+        "role": profile["role"],
+        "username": profile["username"],
+        "display_name": profile["display_name"],
+        "designation": profile["designation"],
+        "jurisdiction": profile.get("jurisdiction", ""),
+        "honesty_label": "Prototype RBAC — demo credentials for judging purposes, not a production identity system.",
+    }
+
+
+@app.get("/auth/roles", tags=["auth"])
+def list_demo_roles() -> dict:
+    """Returns all pre-seeded demo role profiles for 1-click judging evaluation."""
+    return {
+        "status_label": "Prototype RBAC",
+        "honesty_label": "Demo credentials for judging purposes, not a production identity system.",
+        "profiles": [
+            {
+                "role": p["role"],
+                "username": p["username"],
+                "password": p["password"],
+                "display_name": p["display_name"],
+                "designation": p["designation"],
+                "jurisdiction": p["jurisdiction"],
+                "allowed_actions": p["allowed_actions"],
+            }
+            for p in DEMO_PROFILES.values()
+        ],
+    }
+
+
+@app.get("/auth/me", tags=["auth"])
+def get_auth_me(user: dict | None = Depends(get_current_user_optional)) -> dict:
+    """Returns the authenticated identity from the Bearer token, or anonymous status."""
+    if not user:
+        return {"authenticated": False, "role": "anonymous"}
+    return {"authenticated": True, "user": user}
+
+
+
                                                                              
                   
                                                                              
@@ -268,7 +352,11 @@ def batch_score() -> dict:
                                         
                                                                              
 @app.post("/seal/{ulpin}", tags=["curtain"])
-def seal_parcel(ulpin: str, request: SealRequest) -> dict:
+def seal_parcel(
+    ulpin: str,
+    request: SealRequest,
+    current_user: dict = Depends(require_role(["registrar"])),
+) -> dict:
     """
     Priority 1c — Curtain Ledger: seals a parcel on-chain if Mirror Score ≥ threshold.
     Also pays the risk-indexed Assurance Pool premium (Priority 2a).
@@ -340,7 +428,11 @@ def get_sealed_state(ulpin: str) -> dict:
 
 
 @app.post("/mutate/{ulpin}", tags=["curtain"])
-def mutate_parcel(ulpin: str, request: MutateRequest) -> dict:
+def mutate_parcel(
+    ulpin: str,
+    request: MutateRequest,
+    current_user: dict = Depends(require_role(["registrar"])),
+) -> dict:
     """
     Priority 1c — Records a transfer/mutation. Re-runs Mirror Engine before updating seal.
     Any ownership change requires a fresh verification score above threshold.
@@ -388,7 +480,11 @@ def pool_balance() -> dict:
 
 
 @app.post("/pool/claim/{ulpin}", tags=["assurance"])
-def file_claim(ulpin: str, request: ClaimRequest) -> dict:
+def file_claim(
+    ulpin: str,
+    request: ClaimRequest,
+    current_user: dict = Depends(require_role(["registrar"])),
+) -> dict:
     """
     Priority 2a — Admin/oracle triggers a payout from the Assurance Pool.
     In production: this would be triggered by a court/tribunal attestation oracle.
@@ -472,7 +568,10 @@ def community_gini() -> dict:
 
 
 @app.post("/community/propose", tags=["community"])
-def propose_action(request: ProposeActionRequest) -> dict:
+def propose_action(
+    request: ProposeActionRequest,
+    current_user: dict = Depends(require_role(["community_member"])),
+) -> dict:
     """Priority 2b — Proposes a new action for community multi-sig vote."""
     bridge = get_bridge()
     result = bridge.propose_community_action(request.description)
@@ -480,7 +579,10 @@ def propose_action(request: ProposeActionRequest) -> dict:
 
 
 @app.post("/community/vote", tags=["community"])
-def cast_votes(request: VoteRequest) -> dict:
+def cast_votes(
+    request: VoteRequest,
+    current_user: dict = Depends(require_role(["community_member"])),
+) -> dict:
     """
     Priority 2b — Cast votes (online or offline batch simulation).
     If offline_batch=True, simulates the offline vote collection flow.

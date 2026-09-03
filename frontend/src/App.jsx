@@ -1,16 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { translations } from './i18n/translations';
 import RegistrarDashboard from './views/RegistrarDashboard';
 import CitizenView from './views/CitizenView';
 import BankView from './views/BankView';
 import CommunityGovernance from './views/CommunityGovernance';
 import ArchitectureDemoView from './views/ArchitectureDemoView';
+import AuthBar from './components/AuthBar';
 import { ShieldCheck, UserCheck, Landmark, Users, Layers, Globe } from 'lucide-react';
 const API_BASE = 'http://127.0.0.1:8000';
 export default function App() {
   const [activeTab, setActiveTab] = useState('registrar');
   const [lang, setLang] = useState('en');
+  const [currentAuth, setCurrentAuth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bhoomi_auth');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const t = translations[lang] || translations.en;
+
+  // Auto-authenticate as default demo role (registrar) on first load if no token
+  useEffect(() => {
+    if (!currentAuth?.token) {
+      fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'registrar' }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.access_token) {
+            const authObj = {
+              token: data.access_token,
+              role: data.role,
+              username: data.username,
+              displayName: data.display_name,
+              designation: data.designation,
+              jurisdiction: data.jurisdiction,
+            };
+            setCurrentAuth(authObj);
+            try {
+              localStorage.setItem('bhoomi_auth', JSON.stringify(authObj));
+            } catch {}
+          }
+        })
+        .catch((err) => console.error('Initial demo auth failed:', err));
+    }
+  }, []);
+
+  const handleAuthChange = (newAuth) => {
+    setCurrentAuth(newAuth);
+    try {
+      localStorage.setItem('bhoomi_auth', JSON.stringify(newAuth));
+    } catch {}
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {}
@@ -33,7 +80,14 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {}
+            {/* RBAC Role Selector */}
+            <AuthBar
+              apiBase={API_BASE}
+              currentAuth={currentAuth}
+              onAuthChange={handleAuthChange}
+            />
+
+            {/* Language Selector */}
             <div className="flex items-center bg-slate-800/80 border border-slate-700/80 rounded-lg p-0.5 text-xs font-semibold">
               <button
                 onClick={() => setLang('en')}
@@ -118,11 +172,50 @@ export default function App() {
       </nav>
       {}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'registrar' && <RegistrarDashboard lang={lang} t={t} apiBase={API_BASE} />}
-        {activeTab === 'citizen' && <CitizenView lang={lang} t={t} apiBase={API_BASE} />}
-        {activeTab === 'bank' && <BankView lang={lang} t={t} apiBase={API_BASE} />}
-        {activeTab === 'community' && <CommunityGovernance lang={lang} t={t} apiBase={API_BASE} />}
-        {activeTab === 'arch' && <ArchitectureDemoView lang={lang} t={t} apiBase={API_BASE} />}
+        {activeTab === 'registrar' && (
+          <RegistrarDashboard
+            lang={lang}
+            t={t}
+            apiBase={API_BASE}
+            currentAuth={currentAuth}
+            onAuthChange={handleAuthChange}
+          />
+        )}
+        {activeTab === 'citizen' && (
+          <CitizenView
+            lang={lang}
+            t={t}
+            apiBase={API_BASE}
+            currentAuth={currentAuth}
+            onAuthChange={handleAuthChange}
+          />
+        )}
+        {activeTab === 'bank' && (
+          <BankView
+            lang={lang}
+            t={t}
+            apiBase={API_BASE}
+            currentAuth={currentAuth}
+            onAuthChange={handleAuthChange}
+          />
+        )}
+        {activeTab === 'community' && (
+          <CommunityGovernance
+            lang={lang}
+            t={t}
+            apiBase={API_BASE}
+            currentAuth={currentAuth}
+            onAuthChange={handleAuthChange}
+          />
+        )}
+        {activeTab === 'arch' && (
+          <ArchitectureDemoView
+            lang={lang}
+            t={t}
+            apiBase={API_BASE}
+            currentAuth={currentAuth}
+          />
+        )}
       </main>
       {}
       <footer className="border-t border-slate-800/80 py-4 bg-slate-950 text-slate-400 text-xs">

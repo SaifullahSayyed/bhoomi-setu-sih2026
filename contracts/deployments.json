@@ -26,7 +26,7 @@
     "0x09DB0a93B389bEF724429898f539AEB7ac2Dd55f",
     "0x02484cb50AAC86Eae85610D6f4Bf026f30f6627D"
   ],
-  "deployedAt": "2026-08-28T06:36:24.027Z",
+  "deployedAt": "2026-09-03T08:29:38.436Z",
   "network": "localhost:8545",
   "note": "Hardhat local network — no real ETH. Test accounts only."
 }

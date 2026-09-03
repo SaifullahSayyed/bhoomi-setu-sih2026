@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Vote, CheckSquare, Activity, AlertTriangle, ShieldCheck, WifiOff, RefreshCw } from 'lucide-react';
-export default function CommunityGovernance({ lang, t, apiBase }) {
+import { Users, Vote, CheckSquare, Activity, AlertTriangle, ShieldCheck, WifiOff, RefreshCw, Lock, Key } from 'lucide-react';
+export default function CommunityGovernance({ lang, t, apiBase, currentAuth, onAuthChange }) {
   const [commInfo, setCommInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -35,9 +35,13 @@ export default function CommunityGovernance({ lang, t, apiBase }) {
     setVoteSubmitting(true);
     setVoteResponse(null);
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentAuth?.token) {
+        headers['Authorization'] = `Bearer ${currentAuth.token}`;
+      }
       const res = await fetch(`${apiBase}/community/vote`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action_id: 0,
           member_indices: selectedMembers,
@@ -45,6 +49,10 @@ export default function CommunityGovernance({ lang, t, apiBase }) {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setVoteResponse({ success: false, error: data.detail || `HTTP ${res.status}: Action restricted to Gram Sabha members` });
+        return;
+      }
       setVoteResponse(data);
       fetchCommunityInfo();
     } catch (e) {
@@ -57,6 +65,46 @@ export default function CommunityGovernance({ lang, t, apiBase }) {
   const healthStatus = commInfo?.governance_health?.health_status ?? 'healthy';
   return (
     <div className="space-y-6">
+      {/* Role Alert Banner if viewing as non-community-member */}
+      {currentAuth && currentAuth.role !== 'community_member' && (
+        <div className="bg-amber-950/40 border border-amber-500/40 text-amber-200 px-4 py-3 rounded-xl flex items-center justify-between text-xs font-medium shadow-md">
+          <div className="flex items-center gap-2.5">
+            <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold text-amber-300">
+                Viewing as {currentAuth.displayName || currentAuth.role} (Read-Only Mode):
+              </span>
+              <span className="text-amber-200/80 ml-1.5">
+                Community data and Gini meter are public, but casting multi-sig votes on CommunityTenure.sol requires Gram Sabha Member authorization.
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              const res = await fetch(`${apiBase}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: 'community_member' }),
+              });
+              const data = await res.json();
+              if (data.access_token) {
+                onAuthChange?.({
+                  token: data.access_token,
+                  role: data.role,
+                  username: data.username,
+                  displayName: data.display_name,
+                  designation: data.designation,
+                  jurisdiction: data.jurisdiction,
+                });
+              }
+            }}
+            className="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition shrink-0 ml-3 shadow"
+          >
+            Switch to Gram Sabha Member
+          </button>
+        </div>
+      )}
+
       {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
@@ -165,24 +213,60 @@ export default function CommunityGovernance({ lang, t, apiBase }) {
             </div>
           </div>
           {}
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <button
-              disabled={selectedMembers.length === 0 || voteSubmitting}
-              onClick={() => handleCastVote(false)}
-              className="py-2.5 px-3 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
-            >
-              <Vote className="w-4 h-4" />
-              {voteSubmitting ? 'Casting...' : 'Cast Multi-Sig Vote'}
-            </button>
-            <button
-              disabled={selectedMembers.length === 0 || voteSubmitting}
-              onClick={() => handleCastVote(true)}
-              className="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 text-amber-300 font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
-            >
-              <WifiOff className="w-4 h-4 text-amber-400" />
-              {t.offlineBatch}
-            </button>
-          </div>
+          {currentAuth && currentAuth.role !== 'community_member' ? (
+            <div className="pt-2 space-y-2">
+              <div className="text-[11px] text-amber-300 bg-amber-950/50 p-2.5 rounded-lg border border-amber-800/60 flex items-start gap-2">
+                <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong>Gram Sabha Member authorization required to vote:</strong> Currently viewing as {currentAuth.displayName || currentAuth.role}.
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  const res = await fetch(`${apiBase}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: 'community_member' }),
+                  });
+                  const data = await res.json();
+                  if (data.access_token) {
+                    onAuthChange?.({
+                      token: data.access_token,
+                      role: data.role,
+                      username: data.username,
+                      displayName: data.display_name,
+                      designation: data.designation,
+                      jurisdiction: data.jurisdiction,
+                    });
+                  }
+                }}
+                className="w-full py-2.5 px-3 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow"
+              >
+                <Key className="w-4 h-4" />
+                Authenticate as Gram Sabha Member to Cast Vote
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                disabled={selectedMembers.length === 0 || voteSubmitting}
+                onClick={() => handleCastVote(false)}
+                className="py-2.5 px-3 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
+              >
+                <Vote className="w-4 h-4" />
+                {voteSubmitting ? 'Casting...' : 'Cast Multi-Sig Vote'}
+              </button>
+              <button
+                disabled={selectedMembers.length === 0 || voteSubmitting}
+                onClick={() => handleCastVote(true)}
+                className="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 text-amber-300 font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
+              >
+                <WifiOff className="w-4 h-4 text-amber-400" />
+                {t.offlineBatch}
+              </button>
+            </div>
+          )}
+
           {voteResponse && (
             <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg text-xs space-y-1">
               <div className="text-emerald-400 font-bold flex items-center gap-1.5">

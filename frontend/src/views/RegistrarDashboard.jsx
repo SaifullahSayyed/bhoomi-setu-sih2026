@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, AlertTriangle, CheckCircle, RefreshCw, FileText, Lock, DollarSign, Database, Map as MapIcon, List } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, CheckCircle, RefreshCw, FileText, Lock, Key, DollarSign, Database, Map as MapIcon, List } from 'lucide-react';
 import ParcelMap from '../components/ParcelMap';
-export default function RegistrarDashboard({ lang, t, apiBase }) {
+export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAuthChange }) {
   const [parcels, setParcels] = useState([]);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [selectedVillage, setSelectedVillage] = useState('All');
@@ -55,12 +55,20 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
     setSealingLoading(true);
     setSealResult(null);
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentAuth?.token) {
+        headers['Authorization'] = `Bearer ${currentAuth.token}`;
+      }
       const res = await fetch(`${apiBase}/seal/${ulpin}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ declared_value_inr: declaredValue }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setSealResult({ sealed: false, reason: data.detail || `HTTP ${res.status}: Action restricted to Sub-Registrar` });
+        return;
+      }
       setSealResult(data);
       fetchParcels();
       fetchPoolBalance();
@@ -94,6 +102,47 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
           </button>
         </div>
       )}
+
+      {/* Role Alert Banner if viewing as non-registrar */}
+      {currentAuth && currentAuth.role !== 'registrar' && (
+        <div className="bg-amber-950/40 border border-amber-500/40 text-amber-200 px-4 py-3 rounded-xl flex items-center justify-between text-xs font-medium shadow-md">
+          <div className="flex items-center gap-2.5">
+            <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold text-amber-300">
+                Viewing as {currentAuth.displayName || currentAuth.role} (Read-Only Mode):
+              </span>
+              <span className="text-amber-200/80 ml-1.5">
+                Dashboard is readable, but cryptographic sealing on CurtainLedger.sol requires Sub-Registrar authorization.
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              const res = await fetch(`${apiBase}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: 'registrar' }),
+              });
+              const data = await res.json();
+              if (data.access_token) {
+                onAuthChange?.({
+                  token: data.access_token,
+                  role: data.role,
+                  username: data.username,
+                  displayName: data.display_name,
+                  designation: data.designation,
+                  jurisdiction: data.jurisdiction,
+                });
+              }
+            }}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition shrink-0 ml-3 shadow"
+          >
+            Switch to Sub-Registrar
+          </button>
+        </div>
+      )}
+
       {}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
@@ -400,6 +449,39 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
                     <div className="font-semibold text-purple-200">Community-Governed (FRA) — CommunityTenure.sol</div>
                     <div className="text-purple-400/80">Collectively owned under the Forest Rights Act — governed via Gram Sabha multi-sig quorum in the <strong>Community Tenure</strong> tab. Not subject to individual Mirror Engine reconciliation (no individual purchase deeds or 7/12 mutation records apply to FRA collective title).</div>
                   </div>
+                ) : currentAuth && currentAuth.role !== 'registrar' ? (
+                  <div className="space-y-2">
+                    <div className="text-[11px] text-amber-300 bg-amber-950/50 p-2.5 rounded-lg border border-amber-800/60 flex items-start gap-2">
+                      <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <strong>Sub-Registrar authorization required:</strong> Currently authenticated as {currentAuth.displayName || currentAuth.role}. Only Sub-Registrars can seal parcels on CurtainLedger.sol.
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const res = await fetch(`${apiBase}/auth/login`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ role: 'registrar' }),
+                        });
+                        const data = await res.json();
+                        if (data.access_token) {
+                          onAuthChange?.({
+                            token: data.access_token,
+                            role: data.role,
+                            username: data.username,
+                            displayName: data.display_name,
+                            designation: data.designation,
+                            jurisdiction: data.jurisdiction,
+                          });
+                        }
+                      }}
+                      className="w-full py-2 px-3 rounded-lg font-semibold text-xs transition bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 shadow"
+                    >
+                      <Key className="w-3.5 h-3.5" />
+                      Authenticate as Sub-Registrar to Seal
+                    </button>
+                  </div>
                 ) : (
                   <button
                     disabled={!selectedParcel.mirror_result?.sealing_eligible || sealingLoading}
@@ -414,6 +496,7 @@ export default function RegistrarDashboard({ lang, t, apiBase }) {
                     {sealingLoading ? 'Sealing on Ledger...' : selectedParcel.mirror_result?.sealing_eligible ? 'Seal on Curtain Ledger & Pay Assurance Premium' : 'Sealing Ineligible (Score < 85 Threshold)'}
                   </button>
                 )}
+
               </div>
               {}
               {sealResult && (
