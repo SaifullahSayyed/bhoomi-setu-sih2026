@@ -478,6 +478,22 @@ def seal_parcel(
         declared_value=seal_data.declared_value_inr,
     )
 
+    # Idempotent seal: if contract rejected because parcel is already sealed,
+    # read back the existing state and return it as a success. This prevents
+    # demo failures if /seal is called twice (e.g. on page reload or during testing).
+    if not seal_result.get("success") and "already sealed" in str(seal_result.get("error", "")):
+        existing = bridge.get_sealed_state(ulpin)
+        if existing.get("is_sealed") or existing.get("found"):
+            return {
+                "sealed": True,
+                "ulpin": ulpin,
+                "score_used": existing.get("mirror_score", effective_score),
+                "off_chain_cid": existing.get("off_chain_cid", cid),
+                "on_chain": {**existing, "success": True, "note": "Already sealed — existing state returned"},
+                "override_applied": seal_data.override_score is not None,
+                "status_label": "Working Prototype",
+            }
+
     return {
         "sealed": seal_result.get("success", False),
         "ulpin": ulpin,
@@ -980,6 +996,25 @@ def approve_mutation_request(
     new_cid = store.put(simulated_parcel)
 
     bridge = get_bridge()
+
+    # STATE SYNC FIX: proposeMutation() on CurtainLedger requires the parcel to
+    # already be sealed (sp.isSealed == true). After a fresh Hardhat start, a parcel
+    # that was sealed in a previous session is gone from contract state — so we must
+    # re-seal it first before mutating. Check current on-chain state and seal if needed.
+    existing_state = bridge.get_sealed_state(target["ulpin"])
+    if not existing_state.get("is_sealed") or not existing_state.get("found"):
+        # Parcel not yet sealed on-chain in this session — seal it first using
+        # the original parcel owner so the chain-of-trust is complete.
+        original_owner_hash = p["owners"][0]["id_hash"] if p.get("owners") else "initial_owner"
+        original_cid = store.put(p)
+        bridge.seal_parcel(
+            ulpin=target["ulpin"],
+            owner_id_hash=original_owner_hash,
+            mirror_score=score_result.mirror_score,
+            off_chain_cid=original_cid,
+            declared_value=p.get("declared_value_inr", 0.0),
+        )
+
     result = bridge.mutate_parcel(
         target["ulpin"],
         target["new_owner_id_hash"],

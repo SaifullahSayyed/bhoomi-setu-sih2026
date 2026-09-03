@@ -175,6 +175,67 @@ def test_mutation_approve_succeeds_for_clean_parcel():
     assert data["mutation_request"]["status"] == "APPROVED_AND_SEALED"
 
 
+def test_three_view_consistency_after_mutation_approval():
+    """
+    Round 6 regression test: verifies that after APPROVED_AND_SEALED, all three views
+    (Mutations Tab, Citizen Land Status, Bank Collateral) agree on is_sealed=True.
+    Previously failing due to state sync bug between mutate_parcel and get_sealed_state.
+
+    Uses UP231000000005 (Ramesh Patel, Mirror score 100) to avoid state collision
+    with UP231000000001 operations from earlier test cases.
+    """
+    ULPIN = "UP231000000005"  # Ramesh Patel, score=100, area_ha_textual=0.629474
+
+    # Step 1: File mutation as citizen — the approve flow handles sealing if needed
+    cit_token = get_token_for_role("citizen")
+    mut_res = client.post(
+        "/mutation-requests/",
+        json={
+            "ulpin": ULPIN,
+            "applicant_name": "Ramesh Patel",
+            "mutation_type": "gift_deed",
+            "new_owner_name": "Kavita Patel",
+            "new_owner_id_hash": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+            "declared_value_inr": 950000.0,
+            "deed_reference": "REG-GIFT-2026/3301",
+            "proposed_area_ha": 0.6295,  # Within 1% of actual 0.629474 ha
+        },
+        headers={"Authorization": f"Bearer {cit_token}"},
+    )
+    assert mut_res.status_code == 200, f"Expected 200, got {mut_res.status_code}: {mut_res.json()}"
+    req_id = mut_res.json()["request_id"]
+
+    # Step 2: Registrar approves — this must auto-seal first if not sealed, then mutate
+    reg_token = get_token_for_role("registrar")
+    approve_res = client.post(
+        f"/mutation-requests/{req_id}/approve",
+        headers={"Authorization": f"Bearer {reg_token}"},
+    )
+    assert approve_res.status_code == 200, f"Expected 200, got {approve_res.status_code}: {approve_res.json()}"
+    assert approve_res.json()["mutation_request"]["status"] == "APPROVED_AND_SEALED"
+
+    # View 1: Mutations Tab — must show APPROVED_AND_SEALED
+    mut_list = client.get(f"/mutation-requests/?ulpin={ULPIN}").json()
+    mut_entry = next(r for r in mut_list["requests"] if r["request_id"] == req_id)
+    assert mut_entry["status"] == "APPROVED_AND_SEALED", \
+        f"VIEW 1 (Mutations Tab) still shows {mut_entry['status']}"
+
+    # View 2: Citizen Land Status — on_chain_state must show is_sealed=True
+    parcel_state = client.get(f"/parcels/{ULPIN}").json().get("on_chain_state", {})
+    assert parcel_state.get("found") is True, \
+        f"VIEW 2 (Citizen) on_chain_state.found is False — state: {parcel_state}"
+    assert parcel_state.get("is_sealed") is True, \
+        f"VIEW 2 (Citizen) on_chain_state.is_sealed is False — state: {parcel_state}"
+
+    # View 3: Bank Collateral — /sealed/{ulpin} must show is_sealed=True
+    sealed_state = client.get(f"/sealed/{ULPIN}").json()
+    assert sealed_state.get("found") is True, \
+        f"VIEW 3 (Bank) sealed_state.found is False — state: {sealed_state}"
+    assert sealed_state.get("is_sealed") is True, \
+        f"VIEW 3 (Bank) sealed_state.is_sealed is False — state: {sealed_state}"
+
+
+
 # ===========================================================================
 # 2. Rate Limiting Tests (Tier 3b)
 # ===========================================================================
@@ -195,4 +256,5 @@ def test_rate_limiting_burst_exceeded_429():
         statuses.append(res.status_code)
 
     assert 429 in statuses, f"Expected 429 in statuses, got {set(statuses)}"
+
 
