@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, AlertTriangle, CheckCircle, RefreshCw, FileText, Lock, Key, DollarSign, Database, Map as MapIcon, List } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, CheckCircle, RefreshCw, FileText, Lock, Key, DollarSign, Database, Map as MapIcon, List, FileWarning, Check, MessageSquare } from 'lucide-react';
 import ParcelMap from '../components/ParcelMap';
 export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAuthChange }) {
   const [parcels, setParcels] = useState([]);
@@ -13,6 +13,44 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
   const [totalDatasetCount, setTotalDatasetCount] = useState(500);
   const [viewMode, setViewMode] = useState('split'); 
   const [apiError, setApiError] = useState(null);
+  const [disputes, setDisputes] = useState([]);
+  const [resolvingId, setResolvingId] = useState(null);
+
+  const fetchDisputes = async () => {
+    try {
+      const res = await fetch(`${apiBase}/disputes/`);
+      const data = await res.json();
+      setDisputes(data.disputes || []);
+    } catch (e) {
+      console.error('Failed to fetch disputes:', e);
+    }
+  };
+
+  const handleResolveDispute = async (disputeId, status, notes) => {
+    setResolvingId(disputeId);
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentAuth?.token) {
+        headers['Authorization'] = `Bearer ${currentAuth.token}`;
+      }
+      const res = await fetch(`${apiBase}/disputes/${disputeId}/resolve`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          status: status || 'RESOLVED',
+          resolution_notes: notes || 'Administrative inquiry concluded. Land record verified.',
+        }),
+      });
+      if (res.ok) {
+        fetchDisputes();
+      }
+    } catch (e) {
+      console.error('Failed to resolve dispute:', e);
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
   const fetchParcels = async () => {
     setLoading(true);
     setApiError(null);
@@ -50,7 +88,9 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
   useEffect(() => {
     fetchParcels();
     fetchPoolBalance();
+    fetchDisputes();
   }, [selectedVillage]);
+
   const handleSeal = async (ulpin, declaredValue) => {
     setSealingLoading(true);
     setSealResult(null);
@@ -239,6 +279,15 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
               <List className="w-3.5 h-3.5" />
               <span>List Only</span>
             </button>
+            <button
+              onClick={() => setViewMode('disputes')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition ${
+                viewMode === 'disputes' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <FileWarning className="w-3.5 h-3.5 text-amber-400" />
+              <span>Grievances ({disputes.filter(d => d.status === 'OPEN').length} Open)</span>
+            </button>
           </div>
           <button
             onClick={fetchParcels}
@@ -270,8 +319,114 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
           />
         </div>
       )}
-      {}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      {viewMode === 'disputes' ? (
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <FileWarning className="w-5 h-5 text-amber-400" />
+                <h3 className="text-base font-bold text-slate-100">Citizen Land Grievances &amp; Dispute Queue</h3>
+                <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-mono">
+                  Off-Chain Grievance Store
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Field inquiries, boundary overlap claims, and inheritance petitions filed by citizens. Sub-Registrar can review evidence and update inquiry status.
+              </p>
+            </div>
+            <button
+              onClick={fetchDisputes}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700 transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Refresh Queue
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {disputes.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800">
+                No disputes registered in current jurisdiction.
+              </div>
+            ) : (
+              disputes.map((d) => (
+                <div key={d.dispute_id} className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-amber-400">{d.dispute_id}</span>
+                      <span className="text-slate-600">•</span>
+                      <span className="font-mono text-xs text-slate-300">ULPIN: {d.ulpin}</span>
+                      <span className="text-slate-600">•</span>
+                      <span className="text-xs uppercase font-semibold text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                        {d.dispute_type?.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${
+                        d.status === 'RESOLVED' ? 'bg-emerald-950 text-emerald-300 border-emerald-700' :
+                        d.status === 'UNDER_INQUIRY' ? 'bg-blue-950 text-blue-300 border-blue-700' :
+                        'bg-amber-950 text-amber-300 border-amber-700'
+                      }`}>
+                        {d.status}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {d.filed_at ? new Date(d.filed_at).toLocaleDateString() : 'Recent'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <div className="text-slate-500 text-[11px]">Complainant</div>
+                      <div className="font-semibold text-slate-200 mt-0.5">{d.complainant_name}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">{d.contact_info}</div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="text-slate-500 text-[11px]">Grievance Summary</div>
+                      <p className="text-slate-300 mt-0.5 leading-relaxed">{d.description}</p>
+                      {d.evidence_summary && (
+                        <div className="text-[11px] text-slate-400 mt-1 italic">
+                          Evidence: {d.evidence_summary}
+                        </div>
+                      )}
+                      {d.resolution_notes && (
+                        <div className="text-[11px] text-emerald-400 mt-1.5 bg-emerald-950/30 p-2 rounded border border-emerald-800/40">
+                          <strong>Resolution Note:</strong> {d.resolution_notes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {d.status !== 'RESOLVED' && (
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/60">
+                      {d.status === 'OPEN' && (
+                        <button
+                          disabled={resolvingId === d.dispute_id}
+                          onClick={() => handleResolveDispute(d.dispute_id, 'UNDER_INQUIRY', 'Tehsil revenue team deputed for joint boundary inspection.')}
+                          className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 text-xs font-semibold rounded-lg transition"
+                        >
+                          Mark Under Field Inquiry
+                        </button>
+                      )}
+                      <button
+                        disabled={resolvingId === d.dispute_id}
+                        onClick={() => handleResolveDispute(d.dispute_id, 'RESOLVED', 'Field survey completed; boundary marks reconciled per spatial coordinates.')}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1 shadow"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        Resolve Grievance
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {}
         <div className="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[600px]">
           <div className="p-3 border-b border-slate-800 bg-slate-900 flex justify-between items-center text-xs text-slate-400 font-semibold uppercase">
@@ -521,6 +676,8 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

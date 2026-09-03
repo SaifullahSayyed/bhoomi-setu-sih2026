@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
-import { Search, Shield, CheckCircle, Clock, AlertCircle, Award, MapPin } from 'lucide-react';
+import { Search, Shield, CheckCircle, Clock, AlertCircle, Award, MapPin, Download, FileWarning, Send, Check } from 'lucide-react';
 import ParcelMap from '../components/ParcelMap';
-export default function CitizenView({ lang, t, apiBase }) {
+export default function CitizenView({ lang, t, apiBase, currentAuth }) {
   const [searchUlpin, setSearchUlpin] = useState('UP231000000001');
   const [parcelData, setParcelData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Dispute Filing state
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [disputeType, setDisputeType] = useState('boundary_overlap');
+  const [disputeDesc, setDisputeDesc] = useState('');
+  const [complainantName, setComplainantName] = useState('');
+  const [disputeSubmitting, setDisputeSubmitting] = useState(false);
+  const [disputeResult, setDisputeResult] = useState(null);
   const handleSearch = async (e) => {
     e?.preventDefault();
     if (!searchUlpin) return;
@@ -96,6 +104,27 @@ export default function CitizenView({ lang, t, apiBase }) {
                   {parcelData.on_chain_state?.found ? 'Sealed Title Certificate' : 'Presumptive Record'}
                 </span>
               </div>
+
+              {/* Tier 2a Download PDF Certificate Button */}
+              {parcelData.on_chain_state?.found ? (
+                <a
+                  href={`${apiBase}/parcels/${parcelData.parcel.ulpin}/certificate`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 shadow-md"
+                  title="Download official Torrens Title Attestation Certificate (PDF)"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Title Certificate (PDF)</span>
+                </a>
+              ) : (
+                <span
+                  className="text-[11px] text-slate-500 italic bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800 hidden sm:inline-block"
+                  title="Certificates are only issued for cryptographically sealed parcels"
+                >
+                  Certificate Unavailable (Unsealed)
+                </span>
+              )}
             </div>
           </div>
           {}
@@ -184,6 +213,123 @@ export default function CitizenView({ lang, t, apiBase }) {
             <span className="text-[10px] bg-emerald-900/60 border border-emerald-700 px-2 py-1 rounded text-emerald-200">
               Torrens Principle #3
             </span>
+          </div>
+
+          {/* Tier 2b Citizen Dispute / Grievance Redressal Section */}
+          <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileWarning className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-bold text-slate-200">Land Title Grievance & Dispute Redressal</span>
+                <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono">
+                  Off-Chain Queue
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDisputeForm(!showDisputeForm);
+                  setDisputeResult(null);
+                }}
+                className="text-xs text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2"
+              >
+                {showDisputeForm ? 'Cancel Filing' : 'File a Title Dispute'}
+              </button>
+            </div>
+
+            {disputeResult && (
+              <div className="p-3 bg-emerald-950/40 border border-emerald-600/50 rounded-lg text-xs space-y-1">
+                <div className="font-bold text-emerald-400 flex items-center gap-1.5">
+                  <Check className="w-4 h-4" />
+                  Grievance Filed Successfully — Tracking ID: {disputeResult.dispute_id}
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Case assigned to <strong>{disputeResult.dispute?.assigned_to}</strong> for field inquiry and cadastral verification.
+                </p>
+              </div>
+            )}
+
+            {showDisputeForm && (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!disputeDesc) return;
+                  setDisputeSubmitting(true);
+                  try {
+                    const res = await fetch(`${apiBase}/disputes/file`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        ulpin: parcelData.parcel.ulpin,
+                        complainant_name: complainantName || currentAuth?.displayName || 'Citizen Landowner',
+                        dispute_type: disputeType,
+                        description: disputeDesc,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setDisputeResult(data);
+                      setDisputeDesc('');
+                      setShowDisputeForm(false);
+                    }
+                  } catch (err) {
+                    console.error('Failed to file dispute:', err);
+                  } finally {
+                    setDisputeSubmitting(false);
+                  }
+                }}
+                className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-3 pt-3"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] text-slate-400 block mb-1">Complainant Name</label>
+                    <input
+                      type="text"
+                      placeholder={currentAuth?.displayName || "e.g. Ramesh Kumar"}
+                      value={complainantName}
+                      onChange={(e) => setComplainantName(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-400 block mb-1">Dispute Category</label>
+                    <select
+                      value={disputeType}
+                      onChange={(e) => setDisputeType(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="boundary_overlap">Boundary Overlap / Encroachment</option>
+                      <option value="inheritance_claim">Undivided Ancestral / Inheritance Claim</option>
+                      <option value="fraudulent_mutation">Fraudulent or Unregistered Mutation</option>
+                      <option value="area_discrepancy">Ground Area vs RoR Record Mismatch</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] text-slate-400 block mb-1">Detailed Grievance Description *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    placeholder="Describe the discrepancy, affected boundaries, or legal heir rights regarding this parcel..."
+                    value={disputeDesc}
+                    onChange={(e) => setDisputeDesc(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-slate-500">
+                    🏷️ <strong>Honesty Label:</strong> Prototype grievance filing stored off-chain for administrative review.
+                  </span>
+                  <button
+                    type="submit"
+                    disabled={disputeSubmitting}
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {disputeSubmitting ? 'Filing Grievance...' : 'Submit Grievance'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

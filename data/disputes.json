@@ -1,0 +1,92 @@
+[
+  {
+    "dispute_id": "DSP-2026-0001",
+    "ulpin": "UP231000000006",
+    "complainant_name": "Suresh Chandra Patel",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "The northern boundary stone has been shifted by 4 meters following canal realignment. Actual ground possession differs from polygon map by approximately 0.08 hectares.",
+    "evidence_summary": "Village Panchayat resolution dated 12/04/2026 and photograph of survey boundary pillar.",
+    "filed_at": "2026-08-20T10:30:00Z",
+    "status": "RESOLVED",
+    "assigned_to": "Sub-Registrar (Pratapgarh, UP)",
+    "resolution_notes": "Tehsil joint inspection completed. Boundary stones reset per cadastral map coordinates.",
+    "resolved_by": "R. K. Sharma",
+    "resolved_at": "2026-09-03T08:54:50.400378+00:00"
+  },
+  {
+    "dispute_id": "DSP-2026-0002",
+    "ulpin": "UP231000000003",
+    "complainant_name": "Laxmi Devi",
+    "contact_info": "+91-98765-11223",
+    "dispute_type": "inheritance_claim",
+    "description": "Unregistered partition deed. Three legal heirs share undivided ancestral rights; parcel currently reflects sole occupant without mutation entry.",
+    "evidence_summary": "Death certificate of recorded owner and family tree certificate issued by Tehsil.",
+    "filed_at": "2026-08-22T14:15:00Z",
+    "status": "UNDER_INQUIRY",
+    "assigned_to": "Sub-Registrar (Pratapgarh, UP)"
+  },
+  {
+    "dispute_id": "DSP-2026-0003",
+    "ulpin": "UP231000000001",
+    "complainant_name": "Ramesh Kumar",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+    "evidence_summary": "Village Amin field measurement report dated August 2026.",
+    "filed_at": "2026-09-03T08:40:25.964292+00:00",
+    "status": "OPEN",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
+  },
+  {
+    "dispute_id": "DSP-2026-0004",
+    "ulpin": "UP231000000001",
+    "complainant_name": "Ramesh Kumar",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+    "evidence_summary": "Village Amin field measurement report dated August 2026.",
+    "filed_at": "2026-09-03T08:40:40.064017+00:00",
+    "status": "OPEN",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
+  },
+  {
+    "dispute_id": "DSP-2026-0005",
+    "ulpin": "UP231000000001",
+    "complainant_name": "Ramesh Kumar",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+    "evidence_summary": "Village Amin field measurement report dated August 2026.",
+    "filed_at": "2026-09-03T08:44:18.183915+00:00",
+    "status": "OPEN",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
+  },
+  {
+    "dispute_id": "DSP-2026-0006",
+    "ulpin": "UP231000000006",
+    "complainant_name": "Ram Prasad",
+    "contact_info": "+91-9988776655",
+    "dispute_type": "boundary_overlap",
+    "description": "Live test boundary discrepancy: northern boundary stone shifted during irrigation works.",
+    "evidence_summary": "Photographic evidence and Patwari site inspection report.",
+    "filed_at": "2026-09-03T08:54:11.357131+00:00",
+    "status": "RESOLVED",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)",
+    "resolution_notes": "Joint inspection completed. Coordinates verified on-chain.",
+    "resolved_by": "R. K. Sharma",
+    "resolved_at": "2026-09-03T08:54:11.365415+00:00"
+  },
+  {
+    "dispute_id": "DSP-2026-0007",
+    "ulpin": "UP231000000001",
+    "complainant_name": "Ramesh Kumar",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+    "evidence_summary": "Village Amin field measurement report dated August 2026.",
+    "filed_at": "2026-09-03T08:54:50.360764+00:00",
+    "status": "OPEN",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
+  }
+]

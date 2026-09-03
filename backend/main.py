@@ -15,12 +15,14 @@ Run with: uvicorn main:app --reload --port 8000
 
 import json
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 
 from auth import (
     DEMO_PROFILES,
@@ -31,6 +33,7 @@ from auth import (
     require_role,
     get_current_user_optional,
 )
+from certificate import generate_title_certificate
 from mirror_engine import MirrorEngine, MirrorConfig, get_engine
 from off_chain_store import get_store
 from web3_bridge import get_bridge
@@ -147,6 +150,20 @@ class VoteRequest(BaseModel):
 
 class ProposeActionRequest(BaseModel):
     description: str
+
+
+class DisputeFilingRequest(BaseModel):
+    ulpin: str
+    complainant_name: str
+    contact_info: str | None = None
+    dispute_type: str = "boundary_overlap"
+    description: str
+    evidence_summary: str | None = None
+
+
+class DisputeResolutionRequest(BaseModel):
+    status: str = "RESOLVED"
+    resolution_notes: str
 
 
                                                                              
@@ -313,6 +330,42 @@ def get_parcel(ulpin: str) -> dict:
         "mirror_result": score.to_dict(),
         "on_chain_state": on_chain,
     }
+
+
+@app.get("/parcels/{ulpin}/certificate", tags=["parcels"])
+def get_parcel_certificate(ulpin: str) -> StreamingResponse:
+    """
+    Tier 2a — Generates and downloads a PDF Torrens Title Attestation Certificate for sealed parcels.
+    Requires parcel to have been sealed on Curtain Ledger (score >= 85).
+    Honesty Label: Prototype certificate — not a legally issued government document.
+    """
+    p = _get_parcel_by_ulpin(ulpin)
+    if not p:
+        raise HTTPException(status_code=404, detail=f"Parcel {ulpin} not found")
+
+    bridge = get_bridge()
+    sealed_state = bridge.get_sealed_state(ulpin)
+
+    # Must be sealed on-chain (is_sealed=True and found=True)
+    if not sealed_state.get("is_sealed") or not sealed_state.get("found"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Cannot generate Title Attestation Certificate for parcel {ulpin}: "
+                f"Parcel is unsealed (presumptive record only). "
+                f"Sealing on Curtain Ledger (Mirror Score >= 85) is required before a conclusive title certificate can be issued."
+            ),
+        )
+
+    pdf_buffer = generate_title_certificate(p, sealed_state)
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="BhoomiSetu_TitleCertificate_{ulpin}.pdf"',
+            "X-Honesty-Label": "Prototype certificate - not a legally issued government document.",
+        },
+    )
 
 
 @app.get("/parcels/{ulpin}/mirror-score", tags=["mirror"])
@@ -618,6 +671,117 @@ def list_villages() -> dict:
             }
         village_map[v]["parcel_count"] += 1
     return {"villages": list(village_map.values())}
+
+
+# ===========================================================================
+# Tier 2b — Citizen-Initiated Dispute / Grievance Filing
+# ===========================================================================
+
+DISPUTES_FILE = DATA_DIR / "disputes.json"
+
+
+def _load_disputes() -> list[dict]:
+    if DISPUTES_FILE.exists():
+        try:
+            return json.loads(DISPUTES_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    return []
+
+
+def _save_disputes(disputes: list[dict]):
+    DISPUTES_FILE.write_text(json.dumps(disputes, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+@app.post("/disputes/file", tags=["disputes"])
+def file_dispute(
+    request: DisputeFilingRequest,
+    current_user: dict | None = Depends(get_current_user_optional),
+) -> dict:
+    """
+    Tier 2b — Citizen-initiated dispute and grievance filing.
+    Persists dispute records off-chain with a unique tracking identifier.
+    Honesty Label: Working Prototype (Off-Chain Grievance Storage).
+    """
+    p = _get_parcel_by_ulpin(request.ulpin)
+    if not p:
+        raise HTTPException(status_code=404, detail=f"Parcel {request.ulpin} not found in cadastral registry.")
+
+    disputes = _load_disputes()
+    dispute_num = len(disputes) + 1
+    dispute_id = f"DSP-2026-{dispute_num:04d}"
+
+    complainant = request.complainant_name
+    if current_user and current_user.get("display_name"):
+        complainant = current_user.get("display_name")
+
+    record = {
+        "dispute_id": dispute_id,
+        "ulpin": request.ulpin,
+        "complainant_name": complainant,
+        "contact_info": request.contact_info or "Citizen Portal User",
+        "dispute_type": request.dispute_type,
+        "description": request.description,
+        "evidence_summary": request.evidence_summary or "Submitted via Citizen Grievance Portal.",
+        "filed_at": datetime.now(timezone.utc).isoformat(),
+        "status": "OPEN",
+        "assigned_to": f"Sub-Registrar ({p.get('district', 'District')} Jurisdiction)",
+    }
+    disputes.append(record)
+    _save_disputes(disputes)
+
+    return {
+        "status": "success",
+        "dispute_id": dispute_id,
+        "ulpin": request.ulpin,
+        "dispute": record,
+        "honesty_label": "Working Prototype — Off-Chain Grievance Storage",
+    }
+
+
+@app.get("/disputes/", tags=["disputes"])
+def list_disputes(
+    ulpin: str | None = Query(None, description="Filter disputes by ULPIN"),
+    status: str | None = Query(None, description="Filter by status (OPEN, UNDER_INQUIRY, RESOLVED)"),
+) -> dict:
+    """Tier 2b — Lists all registered land disputes for Sub-Registrar review."""
+    disputes = _load_disputes()
+    if ulpin:
+        disputes = [d for d in disputes if d.get("ulpin") == ulpin]
+    if status:
+        disputes = [d for d in disputes if d.get("status") == status]
+    return {
+        "total_disputes": len(disputes),
+        "disputes": disputes,
+        "honesty_label": "Working Prototype — Off-Chain Grievance Storage",
+    }
+
+
+@app.post("/disputes/{dispute_id}/resolve", tags=["disputes"])
+def resolve_dispute(
+    dispute_id: str,
+    request: DisputeResolutionRequest,
+    current_user: dict = Depends(require_role(["registrar"])),
+) -> dict:
+    """Tier 2b — Sub-Registrar updates or adjudicates grievance inquiry status."""
+    disputes = _load_disputes()
+    target = next((d for d in disputes if d.get("dispute_id") == dispute_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail=f"Dispute {dispute_id} not found.")
+
+    target["status"] = request.status
+    target["resolution_notes"] = request.resolution_notes
+    target["resolved_by"] = current_user.get("display_name", "Sub-Registrar")
+    target["resolved_at"] = datetime.now(timezone.utc).isoformat()
+    _save_disputes(disputes)
+
+    return {
+        "status": "success",
+        "dispute_id": dispute_id,
+        "updated_dispute": target,
+        "honesty_label": "Working Prototype",
+    }
+
 
 
                                                                              

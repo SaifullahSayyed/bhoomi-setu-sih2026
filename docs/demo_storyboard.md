@@ -34,21 +34,21 @@
 
 ---
 
-### ACT 3: PRIORITY 1c & 2a — CURTAIN SEALING & ASSURANCE POOL (1:05 – 1:45)
+### ACT 3: PRIORITY 1c & 2a — RBAC & CURTAIN SEALING + ASSURANCE POOL (1:05 – 1:45)
 
 | Time | Visual / Screen Action | Voiceover / Pitch Script |
 | :--- | :--- | :--- |
-| **1:05 - 1:25** | Select clean parcel `UP231000000001` (Score: 100). Show the **Risk-Indexed Assurance Pool formula**: `premium = base_rate * value * (1 + k * (threshold - score))`. | *"Principle 2 & 3: Curtain and Insurance. On clean parcel UP231000000001 with score 100, we seal on CurtainLedger.sol. Notice our original contribution: the Risk-Indexed Premium formula."* |
-| **1:25 - 1:45** | Click **"Seal on Curtain Ledger & Pay Premium"**. Show instant seal on Hardhat smart contract, transaction hash emitted, and point to **Assurance Pool Solvency card jumping from ₹0 to funded** in real-time. | *"High-confidence parcels earn insurance discounts, creating an economic incentive for accurate ground surveys. As we seal this parcel live on Ethereum/Hardhat, watch the Assurance Pool balance increase instantly."* |
+| **1:05 - 1:20** | Point to top **Auth Bar**: show active identity authenticated as **Sub-Registrar (R. K. Sharma, Pratapgarh UP)** via JWT RBAC. Select clean parcel `UP231000000001` (Score: 100). Show the **Risk-Indexed Assurance Pool formula**: `premium = base_rate * value * (1 + k * (threshold - score))`. | *"Principle 2 & 3: Curtain and Insurance. Notice our lightweight Role-Based Access Control: privileged endpoints require cryptographic tokens. Only an authenticated Sub-Registrar can seal. On clean parcel UP231000000001 with score 100, notice our Risk-Indexed Premium formula."* |
+| **1:20 - 1:45** | Click **"Seal on Curtain Ledger & Pay Premium"**. Show instant seal on Hardhat smart contract with Bearer token, transaction hash emitted, and point to **Assurance Pool Solvency card jumping from ₹0 to funded** in real-time. | *"High-confidence parcels earn insurance discounts, creating an economic incentive for accurate ground surveys. Authenticated as Sub-Registrar, we seal this parcel live on Ethereum/Hardhat, and the Assurance Pool balance increases instantly."* |
 
 ---
 
-### ACT 4: PRIORITY 2b — FRA COMMUNITY TENURE & GINI DETECTION (1:45 – 2:20)
+### ACT 4: PRIORITY 2b — FRA COMMUNITY TENURE, RBAC & GINI DETECTION (1:45 – 2:20)
 
 | Time | Visual / Screen Action | Voiceover / Pitch Script |
 | :--- | :--- | :--- |
-| **1:45 - 2:05** | Click **Gram Sabha Community Tenure** tab. Show **Dongri Pahad Gram Sabha (JH)** collective land. Highlight **Elite-Capture Meter (Gini = 0.42)**. | *"Bridging the Community Tenure Gap: Forest Rights Act lands belong to the entire Gram Sabha, not individuals. Every prior hackathon model treated tribal land as individual property."* |
-| **2:05 - 2:20** | Select 12 members to reach 60% multi-sig quorum. Click **"Simulate Offline Vote Sync"**. Show the resolution execute on `CommunityTenure.sol`. | *"Our smart contract enforces a 60% multi-sig quorum. In remote areas, votes are signed offline and synced in a batch when connectivity returns."* |
+| **1:45 - 2:05** | Click **Gram Sabha Community Tenure** tab. Use Auth Bar to switch role to **Gram Sabha Member (Devi Besra, Dongri Pahad JH)**. Highlight **Elite-Capture Meter (Gini = 0.50)**. | *"Bridging the Community Tenure Gap: Forest Rights Act lands belong to the entire Gram Sabha, not individuals. Authenticated as a verified Gram Sabha member via RBAC, we monitor our real-time Elite-Capture inequality meter."* |
+| **2:05 - 2:20** | Select 12 members to reach 60% multi-sig quorum. Click **"Cast Multi-Sig Vote"** (or simulate offline sync). Show the resolution execute on `CommunityTenure.sol`. | *"Our smart contract enforces a 60% multi-sig quorum. Only authenticated community members can cast votes. In remote areas, votes are signed offline and synced in a batch when connectivity returns."* |
 
 ---
 

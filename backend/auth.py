@@ -11,6 +11,7 @@ Roles:
 - citizen: General public verifying title certainty without mutation access.
 """
 
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import jwt
@@ -18,7 +19,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 
-JWT_SECRET = "bhoomi-setu-demo-auth-secret-key-sih2026"
+# Load secret from environment variable (with fallback for quick local development)
+JWT_SECRET = os.environ.get("JWT_SECRET", "bhoomi-setu-demo-auth-secret-key-sih2026")
 JWT_ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
 
