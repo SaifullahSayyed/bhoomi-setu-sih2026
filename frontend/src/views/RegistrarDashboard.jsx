@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, AlertTriangle, CheckCircle, RefreshCw, FileText, Lock, Key, DollarSign, Database, Map as MapIcon, List, FileWarning, Check, MessageSquare } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, CheckCircle, RefreshCw, FileText, Lock, Key, DollarSign, Database, Map as MapIcon, List, FileWarning, Check, MessageSquare, GitPullRequest } from 'lucide-react';
 import ParcelMap from '../components/ParcelMap';
 export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAuthChange }) {
   const [parcels, setParcels] = useState([]);
@@ -16,9 +16,54 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
   const [disputes, setDisputes] = useState([]);
   const [resolvingId, setResolvingId] = useState(null);
 
+  // Tier 3a Mutation requests state
+  const [mutations, setMutations] = useState([]);
+  const [approvingMutationId, setApprovingMutationId] = useState(null);
+  const [mutationActionError, setMutationActionError] = useState(null);
+
+  const fetchMutations = async () => {
+    try {
+      const res = await fetch(`${apiBase}/mutation-requests/`);
+      const data = await res.json();
+      setMutations(data.requests || []);
+    } catch (e) {
+      console.error('Failed to fetch mutations:', e);
+    }
+  };
+
+  const handleApproveMutation = async (requestId) => {
+    setApprovingMutationId(requestId);
+    setMutationActionError(null);
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentAuth?.token) {
+        headers['Authorization'] = `Bearer ${currentAuth.token}`;
+      }
+      const res = await fetch(`${apiBase}/mutation-requests/${requestId}/approve`, {
+        method: 'POST',
+        headers,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMutationActionError(data.detail || 'Approval rejected by Mirror Engine');
+      }
+      fetchMutations();
+      fetchParcels();
+    } catch (e) {
+      console.error('Failed to approve mutation:', e);
+      setMutationActionError(e.message);
+    } finally {
+      setApprovingMutationId(null);
+    }
+  };
+
   const fetchDisputes = async () => {
     try {
-      const res = await fetch(`${apiBase}/disputes/`);
+      const headers = {};
+      if (currentAuth?.token) {
+        headers['Authorization'] = `Bearer ${currentAuth.token}`;
+      }
+      const res = await fetch(`${apiBase}/disputes/`, { headers });
       const data = await res.json();
       setDisputes(data.disputes || []);
     } catch (e) {
@@ -89,6 +134,7 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
     fetchParcels();
     fetchPoolBalance();
     fetchDisputes();
+    fetchMutations();
   }, [selectedVillage]);
 
   const handleSeal = async (ulpin, declaredValue) => {
@@ -288,6 +334,15 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
               <FileWarning className="w-3.5 h-3.5 text-amber-400" />
               <span>Grievances ({disputes.filter(d => d.status === 'OPEN').length} Open)</span>
             </button>
+            <button
+              onClick={() => setViewMode('mutations')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition ${
+                viewMode === 'mutations' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <GitPullRequest className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Mutations ({mutations.filter(m => m.status === 'PENDING').length} Pending)</span>
+            </button>
           </div>
           <button
             onClick={fetchParcels}
@@ -416,6 +471,130 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
                       >
                         <Check className="w-3.5 h-3.5" />
                         Resolve Grievance
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ) : viewMode === 'mutations' ? (
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <GitPullRequest className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-base font-bold text-slate-100">Citizen Mutation &amp; Title Transfer Review Queue</h3>
+                <span className="text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded font-mono">
+                  Off-Chain Queue ➔ Curtain Ledger Sealing
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Citizen-initiated deed applications. <strong>Approve &amp; Seal</strong> re-invokes Mirror Engine scoring on new ownership/area parameters before executing the on-chain mutation transaction.
+              </p>
+            </div>
+            <button
+              onClick={fetchMutations}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700 transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Refresh Queue
+            </button>
+          </div>
+
+          {mutationActionError && (
+            <div className="p-3 bg-rose-950/40 border border-rose-600/50 rounded-lg text-xs text-rose-300 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{mutationActionError}</span>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {mutations.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 text-xs">
+                No mutation requests pending review.
+              </div>
+            ) : (
+              mutations.map((m) => (
+                <div key={m.request_id} className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-cyan-400">{m.request_id}</span>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-xs text-slate-300 font-semibold">{m.ulpin}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${
+                        m.status === 'APPROVED_AND_SEALED'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                          : m.status === 'REJECTED'
+                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                      }`}>
+                        {m.status}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-500">
+                      Filed: {new Date(m.filed_at).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-300">
+                    <div className="bg-slate-900/50 p-2.5 rounded-lg border border-slate-800/80">
+                      <span className="text-[10px] text-slate-400 block uppercase font-mono">Applicant &amp; Transfer</span>
+                      <div className="font-semibold text-slate-200 mt-0.5">{m.applicant_name}</div>
+                      <div className="text-slate-400 text-[11px]">Type: <span className="text-slate-300 font-mono capitalize">{m.mutation_type} Deed</span></div>
+                    </div>
+                    <div className="bg-slate-900/50 p-2.5 rounded-lg border border-slate-800/80">
+                      <span className="text-[10px] text-slate-400 block uppercase font-mono">Transferee / Buyer</span>
+                      <div className="font-semibold text-cyan-300 mt-0.5">{m.new_owner_name}</div>
+                      <div className="text-slate-500 text-[10px] font-mono truncate" title={m.new_owner_id_hash}>ID: {m.new_owner_id_hash}</div>
+                    </div>
+                    <div className="bg-slate-900/50 p-2.5 rounded-lg border border-slate-800/80">
+                      <span className="text-[10px] text-slate-400 block uppercase font-mono">Deed &amp; Consideration</span>
+                      <div className="font-semibold text-emerald-400 mt-0.5">₹{Number(m.declared_value_inr).toLocaleString()}</div>
+                      <div className="text-slate-400 text-[11px]">Ref: <span className="font-mono text-slate-300">{m.deed_reference}</span></div>
+                    </div>
+                  </div>
+
+                  {m.status === 'APPROVED_AND_SEALED' && (
+                    <div className="bg-emerald-950/30 border border-emerald-600/40 rounded-lg p-3 text-xs text-emerald-300 space-y-1">
+                      <div className="font-semibold flex items-center gap-1.5 text-emerald-400">
+                        <ShieldCheck className="w-4 h-4" />
+                        Mirror Engine Re-Verification Passed (Score: {m.mirror_verification?.mirror_score}/100) — On-Chain Mutation Sealed
+                      </div>
+                      <div className="font-mono text-[11px] text-slate-400">
+                        CurtainLedger TX Hash: <span className="text-emerald-300">{m.tx_hash}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        Approved by {m.approved_by} at {new Date(m.approved_at).toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
+                  {m.status === 'REJECTED' && (
+                    <div className="bg-rose-950/30 border border-rose-600/40 rounded-lg p-3 text-xs text-rose-300 space-y-1">
+                      <div className="font-semibold flex items-center gap-1.5 text-rose-400">
+                        <AlertTriangle className="w-4 h-4" />
+                        Mutation Rejected by Mirror Engine
+                      </div>
+                      <div className="text-[11px] text-rose-200">
+                        {m.rejection_reason}
+                      </div>
+                    </div>
+                  )}
+
+                  {m.status === 'PENDING' && (
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[11px] text-slate-400">
+                        Action required: Re-scores candidate cadastral geometry &amp; RoR text. Rejects if score &lt; 85.
+                      </span>
+                      <button
+                        disabled={approvingMutationId === m.request_id}
+                        onClick={() => handleApproveMutation(m.request_id)}
+                        className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        {approvingMutationId === m.request_id ? 'Re-Verifying...' : 'Re-Verify with Mirror Engine & Approve Seal'}
                       </button>
                     </div>
                   )}

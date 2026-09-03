@@ -168,7 +168,7 @@ def generate_title_certificate(parcel: dict, sealed_state: dict) -> io.BytesIO:
     curtain_data = [
         [Paragraph("<strong>Owner Pseudonym (Hash):</strong>", body_bold), Paragraph(f"<font name='Courier' size=8>{owner_hash[:32]}...<br/>{owner_hash[32:] if len(owner_hash) > 32 else ''}</font>", body_text)],
         [Paragraph("<strong>Privacy Assurance:</strong>", body_bold), Paragraph("Zero personal Aadhaar or raw PII stored on public blockchain ledger.", body_text)],
-        [Paragraph("<strong>Off-Chain Verification CID:</strong>", body_bold), Paragraph(f"<font name='Courier' size=8>{cid}</font>", body_text)],
+        [Paragraph("<strong>Off-Chain Storage Reference:</strong>", body_bold), Paragraph(f"<font name='Courier' size=8>{cid}</font><br/><font size=7 color='#64748b'>[Off-Chain Reference (IPFS-equivalent content-addressed store)]</font>", body_text)],
         [Paragraph("<strong>Smart Contract Anchor:</strong>", body_bold), Paragraph("CurtainLedger.sol (Hardhat EVM Localhost / ChainId 1337)", body_text)],
     ]
     t_curtain = Table(curtain_data, colWidths=[200, 320])

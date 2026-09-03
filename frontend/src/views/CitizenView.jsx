@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Shield, CheckCircle, Clock, AlertCircle, Award, MapPin, Download, FileWarning, Send, Check } from 'lucide-react';
+import { Search, Shield, CheckCircle, Clock, AlertCircle, Award, MapPin, Download, FileWarning, Send, Check, GitPullRequest } from 'lucide-react';
 import ParcelMap from '../components/ParcelMap';
-export default function CitizenView({ lang, t, apiBase, currentAuth }) {
+export default function CitizenView({ lang, t, apiBase, currentAuth, onAuthChange }) {
   const [searchUlpin, setSearchUlpin] = useState('UP231000000001');
   const [parcelData, setParcelData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -14,6 +14,19 @@ export default function CitizenView({ lang, t, apiBase, currentAuth }) {
   const [complainantName, setComplainantName] = useState('');
   const [disputeSubmitting, setDisputeSubmitting] = useState(false);
   const [disputeResult, setDisputeResult] = useState(null);
+  const [disputeError, setDisputeError] = useState(null);
+
+  // Tier 3a Mutation Request state
+  const [showMutationForm, setShowMutationForm] = useState(false);
+  const [mutationType, setMutationType] = useState('sale');
+  const [newOwnerName, setNewOwnerName] = useState('');
+  const [declaredValue, setDeclaredValue] = useState('1500000');
+  const [deedRef, setDeedRef] = useState('');
+  const [proposedArea, setProposedArea] = useState('');
+  const [mutationSubmitting, setMutationSubmitting] = useState(false);
+  const [mutationResult, setMutationResult] = useState(null);
+  const [mutationError, setMutationError] = useState(null);
+
   const handleSearch = async (e) => {
     e?.preventDefault();
     if (!searchUlpin) return;
@@ -329,6 +342,191 @@ export default function CitizenView({ lang, t, apiBase, currentAuth }) {
                   </button>
                 </div>
               </form>
+            )}
+          </div>
+
+          {/* Tier 3a Citizen Mutation Request Section */}
+          <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <GitPullRequest className="w-4 h-4 text-cyan-400" />
+                <span className="text-xs font-bold text-slate-200">Citizen Land Mutation Application</span>
+                <span className="text-[9px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded font-mono">
+                  Pending Review Queue
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowMutationForm(!showMutationForm);
+                  setMutationResult(null);
+                }}
+                className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2"
+              >
+                {showMutationForm ? 'Cancel Application' : 'Apply for Title Mutation'}
+              </button>
+            </div>
+
+            {mutationResult && (
+              <div className="p-3 bg-emerald-950/40 border border-emerald-600/50 rounded-lg text-xs space-y-1">
+                <div className="font-bold text-emerald-400 flex items-center gap-1.5">
+                  <Check className="w-4 h-4" />
+                  Mutation Request Lodged — Tracking ID: {mutationResult.request_id}
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Application forwarded to Sub-Registrar queue. Mirror Engine re-verification will execute prior to on-chain sealing.
+                </p>
+              </div>
+            )}
+
+            {mutationError && (
+              <div className="p-3 bg-rose-950/40 border border-rose-600/50 rounded-lg text-xs text-rose-300 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{mutationError}</span>
+              </div>
+            )}
+
+            {showMutationForm && (
+              !currentAuth || (currentAuth.role !== 'citizen' && currentAuth.role !== 'registrar') ? (
+                <div className="bg-slate-950/80 p-4 rounded-xl border border-cyan-800/60 space-y-3">
+                  <div className="flex items-start gap-2 text-xs text-cyan-300">
+                    <AlertCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong>Citizen Authentication Required:</strong> Only verified landowners can initiate title mutations.
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const res = await fetch(`${apiBase}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ role: 'citizen' }),
+                      });
+                      const data = await res.json();
+                      if (data.access_token) {
+                        onAuthChange?.({
+                          token: data.access_token,
+                          role: data.role,
+                          username: data.username,
+                          displayName: data.display_name,
+                          designation: data.designation,
+                          jurisdiction: data.jurisdiction,
+                        });
+                      }
+                    }}
+                    className="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-lg transition shadow"
+                  >
+                    Authenticate as Citizen (Ramesh Kumar)
+                  </button>
+                </div>
+              ) : (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!newOwnerName || !deedRef) return;
+                    setMutationSubmitting(true);
+                    setMutationError(null);
+                    try {
+                      const headers = { 'Content-Type': 'application/json' };
+                      if (currentAuth?.token) {
+                        headers['Authorization'] = `Bearer ${currentAuth.token}`;
+                      }
+                      const dummyHash = Array.from(newOwnerName).reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 12345).toString(16).padStart(64, 'a');
+                      const res = await fetch(`${apiBase}/mutation-requests/`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                          ulpin: parcelData.parcel.ulpin,
+                          applicant_name: currentAuth?.displayName || 'Ramesh Kumar',
+                          mutation_type: mutationType,
+                          new_owner_name: newOwnerName,
+                          new_owner_id_hash: dummyHash,
+                          declared_value_inr: parseFloat(declaredValue) || 1500000.0,
+                          deed_reference: deedRef,
+                          proposed_area_ha: proposedArea ? parseFloat(proposedArea) : null,
+                        }),
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setMutationResult(data);
+                        setNewOwnerName('');
+                        setDeedRef('');
+                        setShowMutationForm(false);
+                      } else {
+                        setMutationError(data.detail || 'Failed to submit mutation application');
+                      }
+                    } catch (err) {
+                      console.error('Failed to file mutation:', err);
+                      setMutationError(err.message);
+                    } finally {
+                      setMutationSubmitting(false);
+                    }
+                  }}
+                  className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-3 pt-3"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] text-slate-400 block mb-1">Mutation Type</label>
+                      <select
+                        value={mutationType}
+                        onChange={(e) => setMutationType(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500"
+                      >
+                        <option value="sale">Sale Deed (बिक्री पत्र)</option>
+                        <option value="gift">Gift Deed (दान पत्र)</option>
+                        <option value="inheritance">Inheritance / Succession (वारिसाना)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-slate-400 block mb-1">New Transferee / Buyer Name *</label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="e.g. Sunita Verma"
+                        value={newOwnerName}
+                        onChange={(e) => setNewOwnerName(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] text-slate-400 block mb-1">Deed Registration Reference *</label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="e.g. REG-SALE-2026/4102"
+                        value={deedRef}
+                        onChange={(e) => setDeedRef(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-slate-400 block mb-1">Declared Value (INR) *</label>
+                      <input
+                        required
+                        type="number"
+                        placeholder="1500000"
+                        value={declaredValue}
+                        onChange={(e) => setDeclaredValue(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] text-slate-500">
+                      🏷️ <strong>Honesty Label:</strong> Queued off-chain. Mirror Engine scoring will re-verify before Curtain seal update.
+                    </span>
+                    <button
+                      type="submit"
+                      disabled={mutationSubmitting}
+                      className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      {mutationSubmitting ? 'Submitting...' : 'Submit Mutation Application'}
+                    </button>
+                  </div>
+                </form>
+              )
             )}
           </div>
         </div>

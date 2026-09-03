@@ -66,18 +66,36 @@ def test_certificate_nonexistent_parcel_returns_404():
 
 
 # ===========================================================================
-# 2. Dispute / Grievance Filing Tests (Tier 2b)
+# 2. Dispute / Grievance Filing Tests (Tier 2b + Part A Updates)
 # ===========================================================================
 
-def test_file_dispute_success():
+def test_file_dispute_unauthenticated_rejected_401():
+    # Part A1 Verification: calling without token must be rejected with 401
     res = client.post("/disputes/file", json={
         "ulpin": "UP231000000001",
-        "complainant_name": "Ramesh Kumar",
-        "contact_info": "+91-98765-43210",
+        "complainant_name": "Anonymous Attacker",
         "dispute_type": "boundary_overlap",
-        "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
-        "evidence_summary": "Village Amin field measurement report dated August 2026.",
+        "description": "Attempting unauthenticated spam filing.",
     })
+    assert res.status_code == 401
+    assert "detail" in res.json()
+
+
+def test_file_dispute_success():
+    # Part A1 Verification: calling with citizen token succeeds
+    cit_token = get_token_for_role("citizen")
+    res = client.post(
+        "/disputes/file",
+        json={
+            "ulpin": "UP231000000001",
+            "complainant_name": "Ramesh Kumar",
+            "contact_info": "+91-98765-43210",
+            "dispute_type": "boundary_overlap",
+            "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+            "evidence_summary": "Village Amin field measurement report dated August 2026.",
+        },
+        headers={"Authorization": f"Bearer {cit_token}"},
+    )
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "success"
@@ -87,22 +105,41 @@ def test_file_dispute_success():
 
 
 def test_file_dispute_nonexistent_ulpin_404():
-    res = client.post("/disputes/file", json={
-        "ulpin": "FAKEULPIN000000",
-        "complainant_name": "Test User",
-        "dispute_type": "encroachment",
-        "description": "Testing 404 response.",
-    })
+    cit_token = get_token_for_role("citizen")
+    res = client.post(
+        "/disputes/file",
+        json={
+            "ulpin": "FAKEULPIN000000",
+            "complainant_name": "Test User",
+            "dispute_type": "encroachment",
+            "description": "Testing 404 response.",
+        },
+        headers={"Authorization": f"Bearer {cit_token}"},
+    )
     assert res.status_code == 404
     assert "not found" in res.json()["detail"]
 
 
-def test_list_disputes():
-    res = client.get("/disputes/")
-    assert res.status_code == 200
-    data = res.json()
-    assert "total_disputes" in data
-    assert len(data["disputes"]) >= 1
+def test_list_disputes_privacy_scoping():
+    # Part A3 Verification:
+    # Unauthenticated / non-registrar caller must have contact_info redacted
+    res_anon = client.get("/disputes/")
+    assert res_anon.status_code == 200
+    anon_data = res_anon.json()
+    assert len(anon_data["disputes"]) >= 1
+    for d in anon_data["disputes"]:
+        assert d["contact_info"] == "[Restricted - Sub-Registrar Access Only]"
+
+    # Authenticated registrar caller must receive unredacted contact_info
+    reg_token = get_token_for_role("registrar")
+    res_reg = client.get("/disputes/", headers={"Authorization": f"Bearer {reg_token}"})
+    assert res_reg.status_code == 200
+    reg_data = res_reg.json()
+    assert len(reg_data["disputes"]) >= 1
+    # Check that at least one dispute has unredacted contact info
+    has_unredacted = any(d["contact_info"] != "[Restricted - Sub-Registrar Access Only]" for d in reg_data["disputes"])
+    assert has_unredacted, "Registrar view must contain unredacted contact details"
+
 
 
 def test_resolve_dispute_requires_registrar_role():

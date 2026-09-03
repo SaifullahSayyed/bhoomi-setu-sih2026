@@ -12,7 +12,7 @@
     "assigned_to": "Sub-Registrar (Pratapgarh, UP)",
     "resolution_notes": "Tehsil joint inspection completed. Boundary stones reset per cadastral map coordinates.",
     "resolved_by": "R. K. Sharma",
-    "resolved_at": "2026-09-03T08:54:50.400378+00:00"
+    "resolved_at": "2026-09-03T09:28:17.845933+00:00"
   },
   {
     "dispute_id": "DSP-2026-0002",
@@ -86,6 +86,54 @@
     "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
     "evidence_summary": "Village Amin field measurement report dated August 2026.",
     "filed_at": "2026-09-03T08:54:50.360764+00:00",
+    "status": "OPEN",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
+  },
+  {
+    "dispute_id": "DSP-2026-0008",
+    "ulpin": "UP231000000001",
+    "complainant_name": "Ramesh Kumar",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+    "evidence_summary": "Village Amin field measurement report dated August 2026.",
+    "filed_at": "2026-09-03T09:02:07.349934+00:00",
+    "status": "OPEN",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
+  },
+  {
+    "dispute_id": "DSP-2026-0009",
+    "ulpin": "UP231000000001",
+    "complainant_name": "Ramesh Kumar",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+    "evidence_summary": "Village Amin field measurement report dated August 2026.",
+    "filed_at": "2026-09-03T09:27:45.220722+00:00",
+    "status": "OPEN",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
+  },
+  {
+    "dispute_id": "DSP-2026-0010",
+    "ulpin": "UP231000000001",
+    "complainant_name": "Ramesh Kumar",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+    "evidence_summary": "Village Amin field measurement report dated August 2026.",
+    "filed_at": "2026-09-03T09:28:06.339740+00:00",
+    "status": "OPEN",
+    "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
+  },
+  {
+    "dispute_id": "DSP-2026-0011",
+    "ulpin": "UP231000000001",
+    "complainant_name": "Ramesh Kumar",
+    "contact_info": "+91-98765-43210",
+    "dispute_type": "boundary_overlap",
+    "description": "Neighbor installed irrigation borewell encroaching 2 meters over the eastern boundary line.",
+    "evidence_summary": "Village Amin field measurement report dated August 2026.",
+    "filed_at": "2026-09-03T09:28:17.816305+00:00",
     "status": "OPEN",
     "assigned_to": "Sub-Registrar (Pratapgarh Jurisdiction)"
   }

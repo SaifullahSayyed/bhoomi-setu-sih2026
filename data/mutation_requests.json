@@ -1,0 +1,582 @@
+[
+  {
+    "request_id": "MUT-2026-0001",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Sunita Verma",
+    "new_owner_id_hash": "7b8f9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f",
+    "declared_value_inr": 1850000.0,
+    "deed_reference": "REG-SALE-2026/8942",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-08-25T11:00:00Z",
+    "status": "PENDING",
+    "rejection_reason": null,
+    "mirror_verification": null,
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0002",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Sunita Verma",
+    "new_owner_id_hash": "7b8f9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f",
+    "declared_value_inr": 1500000.0,
+    "deed_reference": "REG-2026-001",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:13:48.567752+00:00",
+    "status": "PENDING",
+    "rejection_reason": null,
+    "mirror_verification": null,
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0003",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Fraudulent Buyer",
+    "new_owner_id_hash": "9999888877776666555544443333222299998888777766665555444433332222",
+    "declared_value_inr": 2000000.0,
+    "deed_reference": "DEED-MISMATCH-999",
+    "proposed_area_ha": 5.0,
+    "filed_at": "2026-09-03T09:13:48.589560+00:00",
+    "status": "APPROVED_AND_SEALED",
+    "rejection_reason": null,
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 100,
+      "flags": [
+        "ror_parse_failed: could not extract area from text"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "final_score": 100
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": null,
+      "area_discrepancy_pct": null,
+      "sealing_eligible": true,
+      "schema_type": "individual"
+    },
+    "tx_hash": "0x7fdc0c4dd967931d219a7df38d8276b108781272c12be0a3f39db7f96a3ce0f4",
+    "new_cid": "bsQb7b32dbd5b4c9120d50b4d4a8745309eec467c16782059bb37bc42f25c2c965e",
+    "approved_by": "R. K. Sharma",
+    "approved_at": "2026-09-03T09:13:51.895547+00:00"
+  },
+  {
+    "request_id": "MUT-2026-0004",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Aarav Sharma",
+    "new_owner_id_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "declared_value_inr": 2500000.0,
+    "deed_reference": "REG-GENUINE-2026/104",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:13:52.220701+00:00",
+    "status": "APPROVED_AND_SEALED",
+    "rejection_reason": null,
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 100,
+      "flags": [
+        "ror_parse_failed: could not extract area from text"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "final_score": 100
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": null,
+      "area_discrepancy_pct": null,
+      "sealing_eligible": true,
+      "schema_type": "individual"
+    },
+    "tx_hash": "0x86bfa01bea9bc29c5db4c3fcb86f3741a14616a18544a77dc2be944834abd58b",
+    "new_cid": "bsQ5abcbdd96b91058ff8a3d2e5d863545e61645f95b9292ac591d4a468caedc395",
+    "approved_by": "R. K. Sharma",
+    "approved_at": "2026-09-03T09:13:52.232982+00:00"
+  },
+  {
+    "request_id": "MUT-2026-0005",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Sunita Verma",
+    "new_owner_id_hash": "7b8f9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f",
+    "declared_value_inr": 1500000.0,
+    "deed_reference": "REG-2026-001",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:15:30.993318+00:00",
+    "status": "PENDING",
+    "rejection_reason": null,
+    "mirror_verification": null,
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0006",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Fraudulent Buyer",
+    "new_owner_id_hash": "9999888877776666555544443333222299998888777766665555444433332222",
+    "declared_value_inr": 2000000.0,
+    "deed_reference": "DEED-MISMATCH-999",
+    "proposed_area_ha": 5.0,
+    "filed_at": "2026-09-03T09:15:31.009907+00:00",
+    "status": "REJECTED",
+    "rejection_reason": "Mirror Engine re-verification failed: score 70/100 below 85 threshold. Flags: textual_area_mismatch: 231.0%. Curtain Ledger mutation seal blocked.",
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 70,
+      "flags": [
+        "textual_area_mismatch: 231.0%"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "deduct_area_mismatch": -30,
+        "final_score": 70
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 5.0,
+      "area_discrepancy_pct": 231.03,
+      "sealing_eligible": false,
+      "schema_type": "individual"
+    },
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0007",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Aarav Sharma",
+    "new_owner_id_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "declared_value_inr": 2500000.0,
+    "deed_reference": "REG-GENUINE-2026/104",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:15:31.041916+00:00",
+    "status": "REJECTED",
+    "rejection_reason": "Mirror Engine re-verification failed: score 70/100 below 85 threshold. Flags: textual_area_mismatch: 83.3%. Curtain Ledger mutation seal blocked.",
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 70,
+      "flags": [
+        "textual_area_mismatch: 83.3%"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "deduct_area_mismatch": -30,
+        "final_score": 70
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 0.2529,
+      "area_discrepancy_pct": 83.26,
+      "sealing_eligible": false,
+      "schema_type": "individual"
+    },
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0008",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Sunita Verma",
+    "new_owner_id_hash": "7b8f9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f",
+    "declared_value_inr": 1500000.0,
+    "deed_reference": "REG-2026-001",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:19:23.494933+00:00",
+    "status": "PENDING",
+    "rejection_reason": null,
+    "mirror_verification": null,
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0009",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Fraudulent Buyer",
+    "new_owner_id_hash": "9999888877776666555544443333222299998888777766665555444433332222",
+    "declared_value_inr": 2000000.0,
+    "deed_reference": "DEED-MISMATCH-999",
+    "proposed_area_ha": 5.0,
+    "filed_at": "2026-09-03T09:19:23.517740+00:00",
+    "status": "REJECTED",
+    "rejection_reason": "Mirror Engine re-verification failed: score 70/100 below 85 threshold. Flags: textual_area_mismatch: 231.0%. Curtain Ledger mutation seal blocked.",
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 70,
+      "flags": [
+        "textual_area_mismatch: 231.0%"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "deduct_area_mismatch": -30,
+        "final_score": 70
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 5.0,
+      "area_discrepancy_pct": 231.03,
+      "sealing_eligible": false,
+      "schema_type": "individual"
+    },
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0010",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Aarav Sharma",
+    "new_owner_id_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "declared_value_inr": 2500000.0,
+    "deed_reference": "REG-GENUINE-2026/104",
+    "proposed_area_ha": 1.5104,
+    "filed_at": "2026-09-03T09:19:23.560138+00:00",
+    "status": "APPROVED_AND_SEALED",
+    "rejection_reason": null,
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 100,
+      "flags": [],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "final_score": 100
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 1.5104,
+      "area_discrepancy_pct": 0.0,
+      "sealing_eligible": true,
+      "schema_type": "individual"
+    },
+    "tx_hash": "0x6bf339007e8ef07c433f5dfdb9f2d57dbb42def2ed5034423be60b8fc211f9bb",
+    "new_cid": "bsQcea613a253be3829cbcd46ec8c8070583e531954868131e520cc7880c2d7ae7b",
+    "approved_by": "R. K. Sharma",
+    "approved_at": "2026-09-03T09:19:26.494496+00:00"
+  },
+  {
+    "request_id": "MUT-2026-0011",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Sunita Verma",
+    "new_owner_id_hash": "7b8f9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f",
+    "declared_value_inr": 1500000.0,
+    "deed_reference": "REG-2026-001",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:19:40.995001+00:00",
+    "status": "PENDING",
+    "rejection_reason": null,
+    "mirror_verification": null,
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0012",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Fraudulent Buyer",
+    "new_owner_id_hash": "9999888877776666555544443333222299998888777766665555444433332222",
+    "declared_value_inr": 2000000.0,
+    "deed_reference": "DEED-MISMATCH-999",
+    "proposed_area_ha": 5.0,
+    "filed_at": "2026-09-03T09:19:41.017130+00:00",
+    "status": "REJECTED",
+    "rejection_reason": "Mirror Engine re-verification failed: score 70/100 below 85 threshold. Flags: textual_area_mismatch: 231.0%. Curtain Ledger mutation seal blocked.",
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 70,
+      "flags": [
+        "textual_area_mismatch: 231.0%"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "deduct_area_mismatch": -30,
+        "final_score": 70
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 5.0,
+      "area_discrepancy_pct": 231.03,
+      "sealing_eligible": false,
+      "schema_type": "individual"
+    },
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0013",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Aarav Sharma",
+    "new_owner_id_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "declared_value_inr": 2500000.0,
+    "deed_reference": "REG-GENUINE-2026/104",
+    "proposed_area_ha": 1.5104,
+    "filed_at": "2026-09-03T09:19:41.055058+00:00",
+    "status": "APPROVED_AND_SEALED",
+    "rejection_reason": null,
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 100,
+      "flags": [],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "final_score": 100
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 1.5104,
+      "area_discrepancy_pct": 0.0,
+      "sealing_eligible": true,
+      "schema_type": "individual"
+    },
+    "tx_hash": "0x8831e5be871b505bb12f860db1151dec8927ffdd0e7e037e1e6dbd87d580c1fc",
+    "new_cid": "bsQcea613a253be3829cbcd46ec8c8070583e531954868131e520cc7880c2d7ae7b",
+    "approved_by": "R. K. Sharma",
+    "approved_at": "2026-09-03T09:19:43.677387+00:00"
+  },
+  {
+    "request_id": "MUT-2026-0014",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Sunita Verma",
+    "new_owner_id_hash": "7b8f9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f",
+    "declared_value_inr": 1500000.0,
+    "deed_reference": "REG-2026-001",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:27:45.262156+00:00",
+    "status": "PENDING",
+    "rejection_reason": null,
+    "mirror_verification": null,
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0015",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Fraudulent Buyer",
+    "new_owner_id_hash": "9999888877776666555544443333222299998888777766665555444433332222",
+    "declared_value_inr": 2000000.0,
+    "deed_reference": "DEED-MISMATCH-999",
+    "proposed_area_ha": 5.0,
+    "filed_at": "2026-09-03T09:27:45.284926+00:00",
+    "status": "REJECTED",
+    "rejection_reason": "Mirror Engine re-verification failed: score 70/100 below 85 threshold. Flags: textual_area_mismatch: 231.0%. Curtain Ledger mutation seal blocked.",
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 70,
+      "flags": [
+        "textual_area_mismatch: 231.0%"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "deduct_area_mismatch": -30,
+        "final_score": 70
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 5.0,
+      "area_discrepancy_pct": 231.03,
+      "sealing_eligible": false,
+      "schema_type": "individual"
+    },
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0016",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Aarav Sharma",
+    "new_owner_id_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "declared_value_inr": 2500000.0,
+    "deed_reference": "REG-GENUINE-2026/104",
+    "proposed_area_ha": 1.5104,
+    "filed_at": "2026-09-03T09:27:45.346252+00:00",
+    "status": "APPROVED_AND_SEALED",
+    "rejection_reason": null,
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 100,
+      "flags": [],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "final_score": 100
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 1.5104,
+      "area_discrepancy_pct": 0.0,
+      "sealing_eligible": true,
+      "schema_type": "individual"
+    },
+    "tx_hash": "0x42de7c8254d299d52f021583bb3ee00d6d573d6d6c0c81648bdc62817f1e3fc6",
+    "new_cid": "bsQcea613a253be3829cbcd46ec8c8070583e531954868131e520cc7880c2d7ae7b",
+    "approved_by": "R. K. Sharma",
+    "approved_at": "2026-09-03T09:27:45.375767+00:00"
+  },
+  {
+    "request_id": "MUT-2026-0017",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Sunita Verma",
+    "new_owner_id_hash": "7b8f9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f",
+    "declared_value_inr": 1500000.0,
+    "deed_reference": "REG-2026-001",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:28:06.401864+00:00",
+    "status": "PENDING",
+    "rejection_reason": null,
+    "mirror_verification": null,
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0018",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Fraudulent Buyer",
+    "new_owner_id_hash": "9999888877776666555544443333222299998888777766665555444433332222",
+    "declared_value_inr": 2000000.0,
+    "deed_reference": "DEED-MISMATCH-999",
+    "proposed_area_ha": 5.0,
+    "filed_at": "2026-09-03T09:28:06.423227+00:00",
+    "status": "REJECTED",
+    "rejection_reason": "Mirror Engine re-verification failed: score 70/100 below 85 threshold. Flags: textual_area_mismatch: 231.0%. Curtain Ledger mutation seal blocked.",
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 70,
+      "flags": [
+        "textual_area_mismatch: 231.0%"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "deduct_area_mismatch": -30,
+        "final_score": 70
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 5.0,
+      "area_discrepancy_pct": 231.03,
+      "sealing_eligible": false,
+      "schema_type": "individual"
+    },
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0019",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Aarav Sharma",
+    "new_owner_id_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "declared_value_inr": 2500000.0,
+    "deed_reference": "REG-GENUINE-2026/104",
+    "proposed_area_ha": 1.5104,
+    "filed_at": "2026-09-03T09:28:06.457491+00:00",
+    "status": "APPROVED_AND_SEALED",
+    "rejection_reason": null,
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 100,
+      "flags": [],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "final_score": 100
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 1.5104,
+      "area_discrepancy_pct": 0.0,
+      "sealing_eligible": true,
+      "schema_type": "individual"
+    },
+    "tx_hash": "0x46ed64d742521192bbcfc3a60b308a78f82f8e87bd8cd3d22560d889c6e1ad63",
+    "new_cid": "bsQcea613a253be3829cbcd46ec8c8070583e531954868131e520cc7880c2d7ae7b",
+    "approved_by": "R. K. Sharma",
+    "approved_at": "2026-09-03T09:28:06.471709+00:00"
+  },
+  {
+    "request_id": "MUT-2026-0020",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Sunita Verma",
+    "new_owner_id_hash": "7b8f9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f",
+    "declared_value_inr": 1500000.0,
+    "deed_reference": "REG-2026-001",
+    "proposed_area_ha": 0.2529,
+    "filed_at": "2026-09-03T09:28:17.865525+00:00",
+    "status": "PENDING",
+    "rejection_reason": null,
+    "mirror_verification": null,
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0021",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Fraudulent Buyer",
+    "new_owner_id_hash": "9999888877776666555544443333222299998888777766665555444433332222",
+    "declared_value_inr": 2000000.0,
+    "deed_reference": "DEED-MISMATCH-999",
+    "proposed_area_ha": 5.0,
+    "filed_at": "2026-09-03T09:28:17.888674+00:00",
+    "status": "REJECTED",
+    "rejection_reason": "Mirror Engine re-verification failed: score 70/100 below 85 threshold. Flags: textual_area_mismatch: 231.0%. Curtain Ledger mutation seal blocked.",
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 70,
+      "flags": [
+        "textual_area_mismatch: 231.0%"
+      ],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "deduct_area_mismatch": -30,
+        "final_score": 70
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 5.0,
+      "area_discrepancy_pct": 231.03,
+      "sealing_eligible": false,
+      "schema_type": "individual"
+    },
+    "tx_hash": null
+  },
+  {
+    "request_id": "MUT-2026-0022",
+    "ulpin": "UP231000000001",
+    "applicant_name": "Ramesh Kumar",
+    "mutation_type": "sale",
+    "new_owner_name": "Aarav Sharma",
+    "new_owner_id_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "declared_value_inr": 2500000.0,
+    "deed_reference": "REG-GENUINE-2026/104",
+    "proposed_area_ha": 1.5104,
+    "filed_at": "2026-09-03T09:28:17.919798+00:00",
+    "status": "APPROVED_AND_SEALED",
+    "rejection_reason": null,
+    "mirror_verification": {
+      "ulpin": "UP231000000001",
+      "mirror_score": 100,
+      "flags": [],
+      "scoring_breakdown": {
+        "base_score": 100,
+        "final_score": 100
+      },
+      "computed_area_ha": 1.510415,
+      "textual_area_ha": 1.5104,
+      "area_discrepancy_pct": 0.0,
+      "sealing_eligible": true,
+      "schema_type": "individual"
+    },
+    "tx_hash": "0x61abf864f9b01b594839f550b00ee9981882322fa84f69003ccc217d8d3416c1",
+    "new_cid": "bsQcea613a253be3829cbcd46ec8c8070583e531954868131e520cc7880c2d7ae7b",
+    "approved_by": "R. K. Sharma",
+    "approved_at": "2026-09-03T09:28:17.935168+00:00"
+  }
+]

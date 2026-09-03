@@ -23,6 +23,10 @@ from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from starlette.requests import Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from auth import (
     DEMO_PROFILES,
@@ -38,6 +42,7 @@ from mirror_engine import MirrorEngine, MirrorConfig, get_engine
 from off_chain_store import get_store
 from web3_bridge import get_bridge
 
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
                                                                              
            
                                                                              
@@ -51,6 +56,9 @@ app = FastAPI(
     ),
     version="1.0.0",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -166,6 +174,17 @@ class DisputeResolutionRequest(BaseModel):
     resolution_notes: str
 
 
+class MutationFilingRequest(BaseModel):
+    ulpin: str
+    applicant_name: str
+    mutation_type: str = "sale"
+    new_owner_name: str
+    new_owner_id_hash: str
+    declared_value_inr: float
+    deed_reference: str
+    proposed_area_ha: float | None = None
+
+
                                                                              
               
                                                                              
@@ -205,7 +224,8 @@ def health() -> dict:
 # ===========================================================================
 
 @app.post("/auth/login", response_model=TokenResponse, tags=["auth"])
-def login(request: LoginRequest) -> dict:
+@limiter.limit("30/minute")
+def login(request: Request, login_data: LoginRequest) -> dict:
     """
     Tier 1 RBAC — Issues a signed JWT access token for role-based authorization.
     Supports either:
@@ -214,11 +234,11 @@ def login(request: LoginRequest) -> dict:
     Honesty Label: Prototype RBAC — demo credentials for judging purposes, not a production identity system.
     """
     profile = None
-    if request.role and request.role in DEMO_PROFILES:
-        profile = DEMO_PROFILES[request.role]
-    elif request.username and request.password:
-        candidate = DEMO_USERS_BY_USERNAME.get(request.username)
-        if candidate and candidate["password"] == request.password:
+    if login_data.role and login_data.role in DEMO_PROFILES:
+        profile = DEMO_PROFILES[login_data.role]
+    elif login_data.username and login_data.password:
+        candidate = DEMO_USERS_BY_USERNAME.get(login_data.username)
+        if candidate and candidate["password"] == login_data.password:
             profile = candidate
         else:
             raise HTTPException(
@@ -279,7 +299,9 @@ def get_auth_me(user: dict | None = Depends(get_current_user_optional)) -> dict:
                   
                                                                              
 @app.get("/parcels/", tags=["parcels"])
+@limiter.limit("120/minute")
 def list_parcels(
+    request: Request,
     village: str | None = Query(None, description="Filter by village name"),
     schema_type: str | None = Query(None, description="'individual' or 'community'"),
     score_min: int = Query(0, ge=0, le=100),
@@ -405,9 +427,11 @@ def batch_score() -> dict:
                                         
                                                                              
 @app.post("/seal/{ulpin}", tags=["curtain"])
+@limiter.limit("30/minute")
 def seal_parcel(
     ulpin: str,
-    request: SealRequest,
+    seal_data: SealRequest,
+    request: Request,
     current_user: dict = Depends(require_role(["registrar"])),
 ) -> dict:
     """
@@ -430,7 +454,7 @@ def seal_parcel(
     score_result = engine.score_parcel(p)
 
     threshold = MirrorConfig().sealing_threshold
-    effective_score = request.override_score if request.override_score is not None else score_result.mirror_score
+    effective_score = seal_data.override_score if seal_data.override_score is not None else score_result.mirror_score
 
     if effective_score < threshold:
         return {
@@ -440,24 +464,27 @@ def seal_parcel(
             "threshold": threshold,
         }
 
-                                                   
     store = get_store()
     cid = store.put(p)
 
-                                                                                     
     owner_hash = p["owners"][0]["id_hash"] if p.get("owners") else "community"
-    declared_value = request.declared_value_inr or p.get("declared_value_inr", 0)
 
     bridge = get_bridge()
-    result = bridge.seal_parcel(ulpin, owner_hash, effective_score, cid, declared_value)
+    seal_result = bridge.seal_parcel(
+        ulpin=ulpin,
+        owner_id_hash=owner_hash,
+        mirror_score=effective_score,
+        off_chain_cid=cid,
+        declared_value=seal_data.declared_value_inr,
+    )
 
     return {
-        "sealed": result.get("success", False),
-        "mirror_result": score_result.to_dict(),
-        "on_chain": result,
+        "sealed": seal_result.get("success", False),
+        "ulpin": ulpin,
+        "score_used": effective_score,
         "off_chain_cid": cid,
-        "threshold": threshold,
-        "override_applied": request.override_score is not None,
+        "on_chain": seal_result,
+        "override_applied": seal_data.override_score is not None,
         "status_label": "Working Prototype",
     }
 
@@ -696,11 +723,12 @@ def _save_disputes(disputes: list[dict]):
 @app.post("/disputes/file", tags=["disputes"])
 def file_dispute(
     request: DisputeFilingRequest,
-    current_user: dict | None = Depends(get_current_user_optional),
+    current_user: dict = Depends(require_role(["citizen", "registrar"])),
 ) -> dict:
     """
     Tier 2b — Citizen-initiated dispute and grievance filing.
     Persists dispute records off-chain with a unique tracking identifier.
+    RBAC: Requires authenticated 'citizen' or 'registrar' role to prevent spam filings.
     Honesty Label: Working Prototype (Off-Chain Grievance Storage).
     """
     p = _get_parcel_by_ulpin(request.ulpin)
@@ -719,7 +747,7 @@ def file_dispute(
         "dispute_id": dispute_id,
         "ulpin": request.ulpin,
         "complainant_name": complainant,
-        "contact_info": request.contact_info or "Citizen Portal User",
+        "contact_info": request.contact_info or "Registered Citizen Portal User",
         "dispute_type": request.dispute_type,
         "description": request.description,
         "evidence_summary": request.evidence_summary or "Submitted via Citizen Grievance Portal.",
@@ -743,18 +771,33 @@ def file_dispute(
 def list_disputes(
     ulpin: str | None = Query(None, description="Filter disputes by ULPIN"),
     status: str | None = Query(None, description="Filter by status (OPEN, UNDER_INQUIRY, RESOLVED)"),
+    current_user: dict | None = Depends(get_current_user_optional),
 ) -> dict:
-    """Tier 2b — Lists all registered land disputes for Sub-Registrar review."""
+    """
+    Tier 2b — Lists all registered land disputes for Sub-Registrar review.
+    Privacy Scoping: Citizen contact details (phone/email) are redacted unless authenticated as registrar.
+    """
     disputes = _load_disputes()
     if ulpin:
         disputes = [d for d in disputes if d.get("ulpin") == ulpin]
     if status:
         disputes = [d for d in disputes if d.get("status") == status]
+
+    is_registrar = current_user and current_user.get("role") == "registrar"
+
+    sanitized_disputes = []
+    for d in disputes:
+        d_copy = dict(d)
+        if not is_registrar:
+            d_copy["contact_info"] = "[Restricted - Sub-Registrar Access Only]"
+        sanitized_disputes.append(d_copy)
+
     return {
-        "total_disputes": len(disputes),
-        "disputes": disputes,
+        "total_disputes": len(sanitized_disputes),
+        "disputes": sanitized_disputes,
         "honesty_label": "Working Prototype — Off-Chain Grievance Storage",
     }
+
 
 
 @app.post("/disputes/{dispute_id}/resolve", tags=["disputes"])
@@ -781,6 +824,188 @@ def resolve_dispute(
         "updated_dispute": target,
         "honesty_label": "Working Prototype",
     }
+
+
+# ===========================================================================
+# Tier 3a — Citizen-Initiated Mutation Requests
+# ===========================================================================
+
+MUTATIONS_FILE = DATA_DIR / "mutation_requests.json"
+
+
+def _load_mutation_requests() -> list[dict]:
+    if MUTATIONS_FILE.exists():
+        try:
+            return json.loads(MUTATIONS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    return []
+
+
+def _save_mutation_requests(requests: list[dict]):
+    MUTATIONS_FILE.write_text(json.dumps(requests, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+@app.post("/mutation-requests/", tags=["mutations"])
+def create_mutation_request(
+    request: MutationFilingRequest,
+    current_user: dict = Depends(require_role(["citizen", "registrar"])),
+) -> dict:
+    """
+    Tier 3a — Citizen-initiated mutation / land title transfer request.
+    Queues mutation application for Sub-Registrar review with deed reference.
+    Honesty Label: Working Prototype (Off-Chain Queue).
+    """
+    p = _get_parcel_by_ulpin(request.ulpin)
+    if not p:
+        raise HTTPException(status_code=404, detail=f"Parcel {request.ulpin} not found in cadastral registry.")
+
+    requests = _load_mutation_requests()
+    req_num = len(requests) + 1
+    req_id = f"MUT-2026-{req_num:04d}"
+
+    applicant = request.applicant_name
+    if current_user and current_user.get("display_name"):
+        applicant = current_user.get("display_name")
+
+    record = {
+        "request_id": req_id,
+        "ulpin": request.ulpin,
+        "applicant_name": applicant,
+        "mutation_type": request.mutation_type,
+        "new_owner_name": request.new_owner_name,
+        "new_owner_id_hash": request.new_owner_id_hash,
+        "declared_value_inr": request.declared_value_inr,
+        "deed_reference": request.deed_reference,
+        "proposed_area_ha": request.proposed_area_ha,
+        "filed_at": datetime.now(timezone.utc).isoformat(),
+        "status": "PENDING",
+        "rejection_reason": None,
+        "mirror_verification": None,
+        "tx_hash": None,
+    }
+    requests.append(record)
+    _save_mutation_requests(requests)
+
+    return {
+        "status": "success",
+        "request_id": req_id,
+        "mutation_request": record,
+        "honesty_label": "Working Prototype",
+    }
+
+
+@app.get("/mutation-requests/", tags=["mutations"])
+def list_mutation_requests(
+    ulpin: str | None = Query(None, description="Filter by ULPIN"),
+    status: str | None = Query(None, description="Filter by status (PENDING, APPROVED_AND_SEALED, REJECTED)"),
+) -> dict:
+    """Tier 3a — Lists queued mutation requests for Sub-Registrar review."""
+    requests = _load_mutation_requests()
+    if ulpin:
+        requests = [r for r in requests if r.get("ulpin") == ulpin]
+    if status:
+        requests = [r for r in requests if r.get("status") == status]
+    return {
+        "total_requests": len(requests),
+        "requests": requests,
+        "honesty_label": "Working Prototype",
+    }
+
+
+@app.post("/mutation-requests/{request_id}/approve", tags=["mutations"])
+def approve_mutation_request(
+    request_id: str,
+    current_user: dict = Depends(require_role(["registrar"])),
+) -> dict:
+    """
+    Tier 3a — Sub-Registrar approves & seals a citizen mutation request.
+    CRITICAL: Re-invokes Mirror Engine scoring on mutated parcel representation
+    BEFORE calling CurtainLedger.sol. Rejects if score < 85 or flags prevent sealing.
+    """
+    requests = _load_mutation_requests()
+    target = next((r for r in requests if r.get("request_id") == request_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail=f"Mutation request {request_id} not found.")
+
+    if target.get("status") != "PENDING":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Mutation request {request_id} is already processed with status '{target.get('status')}'.",
+        )
+
+    p = _get_parcel_by_ulpin(target["ulpin"])
+    if not p:
+        raise HTTPException(status_code=404, detail=f"Parcel {target['ulpin']} not found.")
+
+    simulated_parcel = dict(p)
+    if target.get("proposed_area_ha") is not None:
+        simulated_parcel["area_textual"] = target["proposed_area_ha"]
+        simulated_parcel["area_unit"] = "hectares"
+        simulated_parcel["ror_text"] = f"area: {target['proposed_area_ha']} hectares"
+
+    current_mutations = list(simulated_parcel.get("mutation_history") or [])
+    current_mutations.append({
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "event_type": target["mutation_type"],
+        "from_owner": simulated_parcel.get("owners", [{}])[0].get("name", "Previous Owner"),
+        "to_owner": target["new_owner_name"],
+        "remarks": f"Deed Ref: {target['deed_reference']}",
+    })
+    simulated_parcel["mutation_history"] = current_mutations
+    simulated_parcel["owners"] = [{
+        "name": target["new_owner_name"],
+        "id_hash": target["new_owner_id_hash"],
+        "share": 1.0,
+    }]
+
+    # Re-invoke Mirror Engine scoring
+    engine = get_engine()
+    score_result = engine.score_parcel(simulated_parcel)
+
+    threshold = MirrorConfig().sealing_threshold
+    if score_result.mirror_score < threshold or not score_result.sealing_eligible:
+        reason = (
+            f"Mirror Engine re-verification failed: score {score_result.mirror_score}/100 "
+            f"below {threshold} threshold. Flags: {', '.join(score_result.flags)}. "
+            f"Curtain Ledger mutation seal blocked."
+        )
+        target["status"] = "REJECTED"
+        target["rejection_reason"] = reason
+        target["mirror_verification"] = score_result.to_dict()
+        _save_mutation_requests(requests)
+        raise HTTPException(status_code=422, detail=reason)
+
+    store = get_store()
+    new_cid = store.put(simulated_parcel)
+
+    bridge = get_bridge()
+    result = bridge.mutate_parcel(
+        target["ulpin"],
+        target["new_owner_id_hash"],
+        score_result.mirror_score,
+        new_cid,
+        target["declared_value_inr"],
+    )
+
+    target["status"] = "APPROVED_AND_SEALED"
+    target["mirror_verification"] = score_result.to_dict()
+    target["new_cid"] = new_cid
+    target["tx_hash"] = result.get("tx_hash") if isinstance(result, dict) else "0xSimulated"
+    target["approved_by"] = current_user.get("display_name", "Sub-Registrar")
+    target["approved_at"] = datetime.now(timezone.utc).isoformat()
+    _save_mutation_requests(requests)
+
+    return {
+        "status": "success",
+        "request_id": request_id,
+        "ulpin": target["ulpin"],
+        "mirror_score": score_result.mirror_score,
+        "on_chain": result,
+        "mutation_request": target,
+        "honesty_label": "Working Prototype",
+    }
+
 
 
 
