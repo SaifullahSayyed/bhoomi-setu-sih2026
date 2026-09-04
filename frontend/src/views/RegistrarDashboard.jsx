@@ -10,11 +10,19 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
   const [sealResult, setSealResult] = useState(null);
   const [filterFlag, setFilterFlag] = useState('all');
   const [poolBalance, setPoolBalance] = useState(0);
+  const [poolEth, setPoolEth] = useState(0);
   const [totalDatasetCount, setTotalDatasetCount] = useState(500);
   const [viewMode, setViewMode] = useState('split'); 
   const [apiError, setApiError] = useState(null);
   const [disputes, setDisputes] = useState([]);
   const [resolvingId, setResolvingId] = useState(null);
+
+  const formatPoolSolvency = (inrVal) => {
+    if (!inrVal || isNaN(inrVal) || inrVal <= 0) return '₹0';
+    if (inrVal >= 10000000) return `₹${(inrVal / 10000000).toFixed(2)} Cr`;
+    if (inrVal >= 100000) return `₹${(inrVal / 100000).toFixed(2)} L`;
+    return `₹${Number(inrVal).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+  };
 
   // Tier 3a Mutation requests state
   const [mutations, setMutations] = useState([]);
@@ -71,7 +79,7 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
     }
   };
 
-  const handleResolveDispute = async (disputeId, status, notes) => {
+  const handleResolveDispute = async (disputeId, resolutionNotes) => {
     setResolvingId(disputeId);
     try {
       const headers = { 'Content-Type': 'application/json' };
@@ -81,10 +89,7 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
       const res = await fetch(`${apiBase}/disputes/${disputeId}/resolve`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          status: status || 'RESOLVED',
-          resolution_notes: notes || 'Administrative inquiry concluded. Land record verified.',
-        }),
+        body: JSON.stringify({ resolution_notes: resolutionNotes }),
       });
       if (res.ok) {
         fetchDisputes();
@@ -100,18 +105,17 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
     setLoading(true);
     setApiError(null);
     try {
-      let url = `${apiBase}/parcels/?limit=500`;
-      if (selectedVillage !== 'All') {
-        url += `&village=${encodeURIComponent(selectedVillage)}`;
-      }
+      const url = selectedVillage === 'All' 
+        ? `${apiBase}/parcels/?limit=500` 
+        : `${apiBase}/parcels/?village=${selectedVillage}&limit=500`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      if (!res.ok) {
+        throw new Error(`API returned HTTP ${res.status}`);
+      }
       const data = await res.json();
       setParcels(data.parcels || []);
-      if (data.total_dataset_count) {
-        setTotalDatasetCount(data.total_dataset_count);
-      }
-      if (data.parcels?.length > 0 && !selectedParcel) {
+      setTotalDatasetCount(data.total || data.parcels?.length || 500);
+      if (data.parcels && data.parcels.length > 0 && !selectedParcel) {
         setSelectedParcel(data.parcels[0]);
       }
     } catch (e) {
@@ -125,7 +129,21 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
     try {
       const res = await fetch(`${apiBase}/pool/balance`);
       const data = await res.json();
-      setPoolBalance(data.balance || 0);
+      let inr = 0;
+      let eth = 0;
+      if (data.balance_inr !== undefined) {
+        inr = Number(data.balance_inr);
+        eth = Number(data.balance_eth || 0);
+      } else if (typeof data.balance === 'number' && data.balance > 1e12) {
+        // Raw wei conversion safety
+        eth = data.balance / 1e18;
+        inr = eth * 1000;
+      } else {
+        eth = Number(data.balance || 0);
+        inr = eth * 1000;
+      }
+      setPoolBalance(inr);
+      setPoolEth(eth);
     } catch (e) {
       console.error(e);
     }
@@ -230,29 +248,30 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
       )}
 
       {}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Parcels Indexed</div>
-          <div className="text-2xl font-bold text-slate-100 mt-1">
+      {/* Metrics Summary Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 min-w-0 overflow-hidden">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">Total Parcels Indexed</div>
+          <div className="text-2xl font-bold text-slate-100 mt-1 truncate">
             {selectedVillage === 'All' ? totalDatasetCount : parcels.length}
           </div>
-          <div className="text-xs text-emerald-400 mt-1">
+          <div className="text-xs text-emerald-400 mt-1 truncate">
             {selectedVillage === 'All' ? '500 Across 3 Villages' : `${selectedVillage} records`}
           </div>
         </div>
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Clean &amp; Sealable (≥85)</div>
-          <div className="text-2xl font-bold text-emerald-400 mt-1">
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 min-w-0 overflow-hidden">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">Clean &amp; Sealable (≥85)</div>
+          <div className="text-2xl font-bold text-emerald-400 mt-1 truncate">
             {parcels.filter(p => p.mirror_result?.sealing_eligible && !(p.mirror_result?.flags?.length > 0)).length || 0}
           </div>
-          <div className="text-xs text-slate-400 mt-1">Score ≥ 85, zero flags detected</div>
+          <div className="text-xs text-slate-400 mt-1 truncate">Score ≥ 85, zero flags detected</div>
         </div>
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Flagged Parcels</div>
-          <div className="text-2xl font-bold text-amber-400 mt-1">
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 min-w-0 overflow-hidden">
+          <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider truncate">Flagged Parcels</div>
+          <div className="text-2xl font-bold text-amber-400 mt-1 truncate">
             {parcels.filter(p => p.mirror_result?.flags?.length > 0 && p.schema_type !== 'community').length || 0}
           </div>
-          <div className="text-xs text-slate-400 mt-1">
+          <div className="text-xs text-slate-400 mt-1 truncate">
             {(() => {
               const flaggedSealable = parcels.filter(p => p.mirror_result?.flags?.length > 0 && p.mirror_result?.sealing_eligible).length;
               const flaggedBlocked = parcels.filter(p => p.mirror_result?.flags?.length > 0 && !p.mirror_result?.sealing_eligible && p.schema_type !== 'community').length;
@@ -260,20 +279,27 @@ export default function RegistrarDashboard({ lang, t, apiBase, currentAuth, onAu
             })()}
           </div>
         </div>
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Assurance Pool Solvency</div>
-          <div className="text-2xl font-bold text-cyan-400 mt-1">₹{(poolBalance * 1000).toLocaleString()}</div>
-          <div className="text-xs text-slate-400 mt-1">Risk-indexed self-funding</div>
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 min-w-0 overflow-hidden">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">Assurance Pool Solvency</div>
+          <div
+            className="text-2xl font-bold text-cyan-400 mt-1 truncate"
+            title={poolEth > 0 ? `${poolEth.toFixed(4)} ETH (₹${poolBalance.toLocaleString('en-IN')})` : `₹${poolBalance.toLocaleString('en-IN')}`}
+          >
+            {formatPoolSolvency(poolBalance)}
+          </div>
+          <div className="text-xs text-slate-400 mt-1 truncate">
+            {poolEth > 0 ? `${poolEth.toFixed(4)} ETH on-chain` : 'Risk-indexed self-funding'}
+          </div>
         </div>
         <div
-          className="bg-purple-950/40 border border-purple-800/60 rounded-xl p-4 cursor-help"
+          className="bg-purple-950/40 border border-purple-800/60 rounded-xl p-4 cursor-help min-w-0 overflow-hidden"
           title={t.communityGovernedTooltip || "Collectively owned under the Forest Rights Act — governed via CommunityTenure.sol multi-sig, not subject to individual Mirror Engine reconciliation."}
         >
-          <div className="text-xs font-semibold text-purple-400 uppercase tracking-wider">{t.communityGoverned || "Community-Governed (FRA)"}</div>
-          <div className="text-2xl font-bold text-purple-300 mt-1">
+          <div className="text-xs font-semibold text-purple-400 uppercase tracking-wider truncate">{t.communityGoverned || "Community-Governed (FRA)"}</div>
+          <div className="text-2xl font-bold text-purple-300 mt-1 truncate">
             {parcels.filter(p => p.schema_type === 'community').length || 100}
           </div>
-          <div className="text-xs text-purple-400/70 mt-1">FRA multi-sig, not Mirror-scored</div>
+          <div className="text-xs text-purple-400/70 mt-1 truncate">FRA multi-sig, not Mirror-scored</div>
         </div>
 
       </div>

@@ -322,15 +322,45 @@ class Web3Bridge:
 
     def get_pool_balance(self) -> dict:
         if self._simulation_mode:
-            return {"balance": round(self._simulated_pool_balance, 2), "simulated": True}
+            inr_val = round(self._simulated_pool_balance, 2)
+            eth_val = round(inr_val / 1000.0, 4) if inr_val > 0 else 0.0
+            return {
+                "balance": eth_val,
+                "balance_eth": eth_val,
+                "balance_inr": inr_val,
+                "simulated": True,
+            }
         try:
             pool = self._contracts.get("AssurancePool")
             if not pool:
-                return {"balance": 0, "simulated": False, "error": "Pool contract not loaded"}
-            balance = pool.functions.poolBalance().call()
-            return {"balance": balance, "simulated": False}
+                return {
+                    "balance": 0.0,
+                    "balance_eth": 0.0,
+                    "balance_inr": 0.0,
+                    "simulated": False,
+                    "error": "Pool contract not loaded",
+                }
+            balance_wei = pool.functions.poolBalance().call()
+            # Convert wei to ETH
+            balance_eth = float(self._w3.from_wei(balance_wei, "ether"))
+            # In our prototype scaling, 1 ETH corresponds to ₹1,000 in assurance pool premiums
+            # (or declared_value / 1,000,000 ETH * 1,000 = declared_value * 0.001 base premium in INR)
+            balance_inr = round(balance_eth * 1000.0, 2)
+            return {
+                "balance": balance_eth,
+                "balance_eth": round(balance_eth, 4),
+                "balance_inr": balance_inr,
+                "balance_wei": str(balance_wei),
+                "simulated": False,
+            }
         except Exception as e:
-            return {"balance": 0, "simulated": False, "error": str(e)}
+            return {
+                "balance": 0.0,
+                "balance_eth": 0.0,
+                "balance_inr": 0.0,
+                "simulated": False,
+                "error": str(e),
+            }
 
     def file_claim(self, ulpin: str, claimant_address: str) -> dict:
         """Admin-triggered claim (simulates court/tribunal attestation in production)."""
